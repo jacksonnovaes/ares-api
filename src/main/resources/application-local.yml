@@ -1,0 +1,55 @@
+spring:
+  application:
+    name: ares-api
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/ares}
+    username: ${DB_USERNAME:ares}
+    password: ${DB_PASSWORD:ares}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+        format_sql: false
+  flyway:
+    enabled: true
+  jackson:
+    default-property-inclusion: non_null
+  mvc:
+    problemdetails:
+      enabled: true
+
+server:
+  port: ${SERVER_PORT:8080}
+  forward-headers-strategy: framework
+  error:
+    include-message: never
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+ares:
+  security:
+    issuer: ${JWT_ISSUER:ares-api}
+    secret-base64: ${JWT_SECRET_BASE64:VGhpcy1pcy1hLWRldmVsb3BtZW50LWtleS1jaGFuZ2UtaXQtaW4tcHJvZHVjdGlvbi0xMjM0NTY=}
+    access-token-ttl: ${ACCESS_TOKEN_TTL:PT15M}
+    refresh-token-ttl: ${REFRESH_TOKEN_TTL:P30D}
+    password-reset-ttl: ${PASSWORD_RESET_TTL:PT30M}
+    login:
+      max-failures: ${LOGIN_MAX_FAILURES:5}
+      window: ${LOGIN_FAILURE_WINDOW:PT15M}
+      block-duration: ${LOGIN_BLOCK_DURATION:PT15M}
+
+logging:
+  level:
+    org.springframework.security: INFO
