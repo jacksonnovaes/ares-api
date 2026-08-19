@@ -14,14 +14,16 @@ import java.util.*;
 @RestController @RequestMapping("/api/v1/service-orders")
 public class ServiceOrderController{
     private final ServiceOrderUseCase orders;public ServiceOrderController(ServiceOrderUseCase orders){this.orders=orders;}
-    @PostMapping @ResponseStatus(HttpStatus.CREATED) @PreAuthorize("hasAuthority('SERVICE_ORDER_CREATE')")
+    @PostMapping @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAuthority('SERVICE_ORDER_CREATE') and !hasRole('CUSTOMER')")
     ServiceOrder create(@Valid @RequestBody CreateOrderRequest r){return orders.create(new ServiceOrderUseCase.CreateOrderCommand(
             r.customerId(),r.assetId(),r.serviceIds(),r.title(),r.description(),r.priority(),r.estimatedValue(),
             r.assignedTechnicianId(),r.dueAt()));}
     @GetMapping @PreAuthorize("hasAuthority('SERVICE_ORDER_READ')") List<ServiceOrder> list(){return orders.list();}
     @GetMapping("/{id}") @PreAuthorize("hasAuthority('SERVICE_ORDER_READ')")
     ServiceOrder get(@PathVariable UUID id){return orders.get(id);}
-    @PatchMapping("/{id}/status") @PreAuthorize("hasAuthority('SERVICE_ORDER_UPDATE')")
+    @PatchMapping("/{id}/status")
+    @PreAuthorize("hasAuthority('SERVICE_ORDER_UPDATE') and !hasRole('CUSTOMER')")
     ServiceOrder status(@PathVariable UUID id,@Valid @RequestBody ChangeStatusRequest r){return orders.changeStatus(id,
             new ServiceOrderUseCase.ChangeStatusCommand(r.status(),r.finalValue()));}
     record CreateOrderRequest(@NotNull UUID customerId,@NotNull UUID assetId,@NotEmpty Set<UUID> serviceIds,

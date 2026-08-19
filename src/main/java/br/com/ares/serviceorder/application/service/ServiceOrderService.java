@@ -27,6 +27,7 @@ public class ServiceOrderService implements ServiceOrderUseCase {
 
     @Override @Transactional
     public ServiceOrder create(CreateOrderCommand c){var actor=currentActor.requiredActor();UUID tenant=actor.tenantId();
+        rejectCustomerWrite(actor);
         if(!customers.exists(tenant,c.customerId()))throw BusinessException.notFound("customer_not_found","Cliente não encontrado.");
         if(!assets.belongsToCustomer(tenant,c.assetId(),c.customerId()))throw BusinessException.badRequest(
                 "asset_customer_mismatch","O ativo não pertence ao cliente informado.");
@@ -54,6 +55,7 @@ public class ServiceOrderService implements ServiceOrderUseCase {
 
     @Override @Transactional
     public ServiceOrder changeStatus(UUID id,ChangeStatusCommand c){var actor=currentActor.requiredActor();
+        rejectCustomerWrite(actor);
         ServiceOrder order=required(id,actor.tenantId());enforceScope(order,actor);
         order=repository.save(order.changeStatus(c.status(),c.finalValue(),clock.instant()));
         audit.record(actor.tenantId(),actor.userId(),"SERVICE_ORDER_STATUS_CHANGED","SERVICE_ORDER",
@@ -61,6 +63,9 @@ public class ServiceOrderService implements ServiceOrderUseCase {
 
     private ServiceOrder required(UUID id,UUID tenant){return repository.findByIdAndTenantId(id,tenant).orElseThrow(()->
             BusinessException.notFound("service_order_not_found","Ordem de serviço não encontrada."));}
+    private void rejectCustomerWrite(AuthenticatedActor actor){
+        if(actor.hasRole("CUSTOMER"))throw BusinessException.forbidden("customer_read_only",
+                "Clientes possuem acesso somente para consulta de ordens de serviço.");}
     private void enforceScope(ServiceOrder order,AuthenticatedActor actor){
         if(actor.hasRole("CUSTOMER")&&!order.customerId().equals(actor.customerId()))throw BusinessException.notFound(
                 "service_order_not_found","Ordem de serviço não encontrada.");

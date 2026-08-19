@@ -57,6 +57,7 @@ class SecurityConfiguration {
                 .authorizeHttpRequests(authorize -> {
                     authorize.requestMatchers("/api/v1/tenants/register", "/api/v1/branding",
                             "/api/v1/auth/login",
+                            "/api/v1/customer/auth/login",
                             "/api/v1/auth/refresh",
                             "/api/v1/auth/logout",
                             "/api/v1/auth/forgot-password",

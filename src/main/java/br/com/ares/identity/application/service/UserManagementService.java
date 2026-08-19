@@ -59,6 +59,11 @@ public class UserManagementService implements UserManagementUseCase {
             throw BusinessException.badRequest("customer_link_required",
                     "Usuários CUSTOMER devem estar vinculados a um cliente.");
         }
+        if (command.roles().contains(Role.CUSTOMER) && command.extraPermissions() != null
+                && command.extraPermissions().stream().anyMatch(this::isServiceOrderWritePermission)) {
+            throw BusinessException.badRequest("customer_read_only",
+                    "Usuários CUSTOMER não podem receber permissão de escrita em ordens de serviço.");
+        }
         EnumSet<Permission> permissions = EnumSet.noneOf(Permission.class);
         permissions.addAll(RolePermissions.defaultsFor(command.roles()));
         if (command.extraPermissions() != null) permissions.addAll(command.extraPermissions());
@@ -98,5 +103,11 @@ public class UserManagementService implements UserManagementUseCase {
     private UserView view(User user) {
         return new UserView(user.id(), user.name(), user.email(), user.phone(), user.jobTitle(), user.status(),
                 user.roles(), user.permissions(), user.customerId());
+    }
+
+    private boolean isServiceOrderWritePermission(Permission permission) {
+        return permission == Permission.SERVICE_ORDER_CREATE
+                || permission == Permission.SERVICE_ORDER_UPDATE
+                || permission == Permission.SERVICE_ORDER_CANCEL;
     }
 }
