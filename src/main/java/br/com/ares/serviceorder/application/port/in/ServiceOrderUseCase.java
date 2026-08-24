@@ -10,8 +10,12 @@ public interface ServiceOrderUseCase {
     ServiceOrder get(UUID id);
     List<ServiceOrder> list();
     ServiceOrder changeStatus(UUID id, ChangeStatusCommand command);
-    record CreateOrderCommand(UUID customerId, UUID assetId, Set<UUID> serviceIds, String title,
-                              String description, ServiceOrderPriority priority, BigDecimal estimatedValue,
+    ServiceOrder updateQuote(UUID id, UpdateQuoteCommand command);
+    record CreateOrderCommand(UUID customerId, UUID assetId, List<QuoteLineCommand> quoteLines, String title,
+                              String description, ServiceOrderPriority priority,
                               UUID assignedTechnicianId, Instant dueAt) {}
-    record ChangeStatusCommand(ServiceOrderStatus status, BigDecimal finalValue) {}
+    record ChangeStatusCommand(String status, BigDecimal finalValue) {}
+    record UpdateQuoteCommand(UUID assetId, List<QuoteLineCommand> quoteLines) {}
+    record QuoteLineCommand(UUID serviceId, String description, BigDecimal quantity,
+                            String unit, BigDecimal unitPrice) {}
 }

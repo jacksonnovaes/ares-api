@@ -1,5 +1,6 @@
 package br.com.ares.identity.application.service;
 
+import br.com.ares.customer.application.port.in.CustomerDirectory;
 import br.com.ares.identity.application.port.in.UserManagementUseCase;
 import br.com.ares.identity.application.port.out.PasswordHasher;
 import br.com.ares.identity.application.port.out.RefreshSessionRepository;
@@ -23,17 +24,20 @@ public class UserManagementService implements UserManagementUseCase {
     private final RefreshSessionRepository sessions;
     private final PasswordHasher passwordHasher;
     private final PasswordPolicy passwordPolicy;
+    private final CustomerDirectory customers;
     private final CurrentActorProvider currentActor;
     private final AuditLogPort audit;
     private final Clock clock;
 
     public UserManagementService(UserRepository users, RefreshSessionRepository sessions,
                                  PasswordHasher passwordHasher, PasswordPolicy passwordPolicy,
+                                 CustomerDirectory customers,
                                  CurrentActorProvider currentActor, AuditLogPort audit, Clock clock) {
         this.users = users;
         this.sessions = sessions;
         this.passwordHasher = passwordHasher;
         this.passwordPolicy = passwordPolicy;
+        this.customers = customers;
         this.currentActor = currentActor;
         this.audit = audit;
         this.clock = clock;
@@ -59,16 +63,26 @@ public class UserManagementService implements UserManagementUseCase {
             throw BusinessException.badRequest("customer_link_required",
                     "Usuários CUSTOMER devem estar vinculados a um cliente.");
         }
+        if (command.roles().contains(Role.CUSTOMER)
+                && !customers.exists(actor.tenantId(), command.customerId())) {
+            throw BusinessException.badRequest("customer_link_invalid",
+                    "O cliente selecionado não pertence a esta empresa.");
+        }
+        if (command.roles().contains(Role.CUSTOMER) && command.roles().size() != 1) {
+            throw BusinessException.badRequest("customer_exclusive_role",
+                    "O acesso do cliente deve possuir somente o perfil CUSTOMER.");
+        }
         if (command.roles().contains(Role.CUSTOMER) && command.extraPermissions() != null
-                && command.extraPermissions().stream().anyMatch(this::isServiceOrderWritePermission)) {
+                && !command.extraPermissions().isEmpty()) {
             throw BusinessException.badRequest("customer_read_only",
-                    "Usuários CUSTOMER não podem receber permissão de escrita em ordens de serviço.");
+                    "O acesso do cliente não pode receber permissões adicionais.");
         }
         EnumSet<Permission> permissions = EnumSet.noneOf(Permission.class);
         permissions.addAll(RolePermissions.defaultsFor(command.roles()));
         if (command.extraPermissions() != null) permissions.addAll(command.extraPermissions());
         Instant now = clock.instant();
-        var user = new User(UUID.randomUUID(), actor.tenantId(), command.customerId(), command.name().trim(),
+        UUID linkedCustomerId = command.roles().contains(Role.CUSTOMER) ? command.customerId() : null;
+        var user = new User(UUID.randomUUID(), actor.tenantId(), linkedCustomerId, command.name().trim(),
                 email, passwordHasher.hash(command.password()), command.phone(), command.jobTitle(),
                 UserStatus.ACTIVE, Set.copyOf(command.roles()), Set.copyOf(permissions), null, now, now, now);
         user = users.save(user);
@@ -103,11 +117,5 @@ public class UserManagementService implements UserManagementUseCase {
     private UserView view(User user) {
         return new UserView(user.id(), user.name(), user.email(), user.phone(), user.jobTitle(), user.status(),
                 user.roles(), user.permissions(), user.customerId());
-    }
-
-    private boolean isServiceOrderWritePermission(Permission permission) {
-        return permission == Permission.SERVICE_ORDER_CREATE
-                || permission == Permission.SERVICE_ORDER_UPDATE
-                || permission == Permission.SERVICE_ORDER_CANCEL;
     }
 }

@@ -55,7 +55,9 @@ class SecurityConfiguration {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> {
-                    authorize.requestMatchers("/api/v1/tenants/register", "/api/v1/branding",
+                    authorize.requestMatchers(
+                            "/api/v1/tenants/register",
+                            "/api/v1/branding",
                             "/api/v1/auth/login",
                             "/api/v1/customer/auth/login",
                             "/api/v1/auth/refresh",

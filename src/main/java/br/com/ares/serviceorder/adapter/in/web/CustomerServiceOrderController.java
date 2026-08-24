@@ -1,9 +1,9 @@
 package br.com.ares.serviceorder.adapter.in.web;
 
 import br.com.ares.serviceorder.application.port.in.ServiceOrderUseCase;
+import br.com.ares.serviceorder.application.port.in.ServiceOrderStatusDirectory;
 import br.com.ares.serviceorder.domain.model.ServiceOrder;
 import br.com.ares.serviceorder.domain.model.ServiceOrderPriority;
-import br.com.ares.serviceorder.domain.model.ServiceOrderStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,28 +22,37 @@ import java.util.UUID;
 public class CustomerServiceOrderController {
 
     private final ServiceOrderUseCase orders;
+    private final ServiceOrderStatusDirectory statuses;
 
-    public CustomerServiceOrderController(ServiceOrderUseCase orders) {
+    public CustomerServiceOrderController(ServiceOrderUseCase orders, ServiceOrderStatusDirectory statuses) {
         this.orders = orders;
+        this.statuses = statuses;
     }
 
     @GetMapping
     List<CustomerServiceOrderView> list() {
-        return orders.list().stream().map(CustomerServiceOrderView::from).toList();
+        return orders.list().stream().map(this::view).toList();
     }
 
     @GetMapping("/{id}")
     CustomerServiceOrderView get(@PathVariable UUID id) {
-        return CustomerServiceOrderView.from(orders.get(id));
+        return view(orders.get(id));
+    }
+
+    private CustomerServiceOrderView view(ServiceOrder order) {
+        String statusName = statuses.required(order.tenantId(), order.status()).name();
+        return CustomerServiceOrderView.from(order, statusName);
     }
 
     record CustomerServiceOrderView(
             UUID id,
             UUID assetId,
             Set<UUID> serviceIds,
+            List<CustomerQuoteLineView> quoteLines,
             String title,
             String description,
-            ServiceOrderStatus status,
+            String status,
+            String statusName,
             ServiceOrderPriority priority,
             BigDecimal estimatedValue,
             BigDecimal finalValue,
@@ -53,11 +62,17 @@ public class CustomerServiceOrderController {
             Instant createdAt,
             Instant updatedAt
     ) {
-        static CustomerServiceOrderView from(ServiceOrder order) {
+        static CustomerServiceOrderView from(ServiceOrder order, String statusName) {
             return new CustomerServiceOrderView(order.id(), order.assetId(), order.serviceIds(),
-                    order.title(), order.description(), order.status(), order.priority(),
+                    order.quoteLines().stream().map(line -> new CustomerQuoteLineView(line.description(),
+                            line.quantity(), line.unit(), line.unitPrice(), line.total())).toList(),
+                    order.title(), order.description(), order.status(), statusName, order.priority(),
                     order.estimatedValue(), order.finalValue(), order.openedAt(), order.dueAt(),
                     order.completedAt(), order.createdAt(), order.updatedAt());
         }
+    }
+
+    record CustomerQuoteLineView(String description, BigDecimal quantity, String unit,
+                                 BigDecimal unitPrice, BigDecimal total) {
     }
 }

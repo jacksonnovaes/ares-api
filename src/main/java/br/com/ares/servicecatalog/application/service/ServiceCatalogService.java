@@ -22,7 +22,7 @@ public class ServiceCatalogService implements ServiceCatalogUseCase, ServiceCata
     public CatalogService create(CreateServiceCommand c) {
         var actor=currentActor.requiredActor(); Instant now=clock.instant();
         var value=new CatalogService(UUID.randomUUID(),actor.tenantId(),c.name().trim(),c.description(),
-                c.basePrice(),c.estimatedMinutes(),true,now,now);
+                c.basePrice(),c.estimatedMinutes(),c.type(),true,now,now);
         value=repository.save(value);
         audit.record(actor.tenantId(),actor.userId(),"CATALOG_SERVICE_CREATED","CATALOG_SERVICE",
                 value.id().toString(),Map.of()); return value;
@@ -38,5 +38,9 @@ public class ServiceCatalogService implements ServiceCatalogUseCase, ServiceCata
     @Override @Transactional(readOnly=true)
     public boolean allExistAndActive(UUID tenantId, Set<UUID> ids) {
         return ids!=null && !ids.isEmpty() && repository.countActiveByTenantIdAndIds(tenantId,ids)==ids.size();
+    }
+    @Override @Transactional(readOnly=true)
+    public boolean anyRequiresAsset(UUID tenantId, Set<UUID> ids) {
+        return ids!=null && !ids.isEmpty() && repository.existsMaintenanceByTenantIdAndIds(tenantId,ids);
     }
 }

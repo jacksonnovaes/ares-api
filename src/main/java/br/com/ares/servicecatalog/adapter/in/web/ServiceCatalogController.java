@@ -2,6 +2,7 @@ package br.com.ares.servicecatalog.adapter.in.web;
 
 import br.com.ares.servicecatalog.application.port.in.ServiceCatalogUseCase;
 import br.com.ares.servicecatalog.domain.model.CatalogService;
+import br.com.ares.servicecatalog.domain.model.CatalogServiceType;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import org.springframework.http.HttpStatus;
@@ -25,7 +26,8 @@ public class ServiceCatalogController {
     @PreAuthorize("hasAuthority('SERVICE_CREATE')")
     CatalogService create(@Valid @RequestBody CreateServiceRequest r) {
         return services.create(
-                new ServiceCatalogUseCase.CreateServiceCommand(r.name(), r.description(), r.basePrice(), r.estimatedMinutes()));
+                new ServiceCatalogUseCase.CreateServiceCommand(r.name(), r.description(), r.basePrice(),
+                        r.estimatedMinutes(), r.type()));
     }
 
     @GetMapping
@@ -42,6 +44,6 @@ public class ServiceCatalogController {
 
     record CreateServiceRequest(@NotBlank @Size(max = 160) String name, @Size(max = 2000) String description,
                                 @NotNull @DecimalMin("0.00") BigDecimal basePrice,
-                                @Positive Integer estimatedMinutes) {
+                                @Positive Integer estimatedMinutes, @NotNull CatalogServiceType type) {
     }
 }

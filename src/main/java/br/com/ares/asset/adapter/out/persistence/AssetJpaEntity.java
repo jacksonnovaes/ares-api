@@ -1,6 +1,5 @@
 package br.com.ares.asset.adapter.out.persistence;
 
-import br.com.ares.asset.domain.model.AssetType;
 import jakarta.persistence.*;
 
 import java.time.Instant;
@@ -15,9 +14,8 @@ class AssetJpaEntity {
     UUID tenantId;
     @Column(name = "customer_id", nullable = false)
     UUID customerId;
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    AssetType type;
+    @Column(nullable = false, length = 50)
+    String type;
     @Column(nullable = false)
     String name;
     String brand;

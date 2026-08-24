@@ -51,6 +51,7 @@ class TenantPersistenceAdapter implements TenantRepository {
         entity.status = tenant.status();
         entity.logoUrl = tenant.logoUrl();
         entity.primaryColor = tenant.primaryColor();
+        entity.requireAssets = tenant.requireAssets();
         entity.createdAt = tenant.createdAt();
         entity.updatedAt = tenant.updatedAt();
         return entity;
@@ -58,6 +59,7 @@ class TenantPersistenceAdapter implements TenantRepository {
 
     private Tenant toDomain(TenantJpaEntity entity) {
         return new Tenant(entity.id, entity.legalName, entity.tradeName, entity.slug, entity.document,
-                entity.status, entity.logoUrl, entity.primaryColor, entity.createdAt, entity.updatedAt);
+                entity.status, entity.logoUrl, entity.primaryColor, entity.requireAssets, entity.createdAt,
+                entity.updatedAt);
     }
 }

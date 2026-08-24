@@ -92,7 +92,9 @@ public class AuthService implements AuthUseCase {
             loginAttempts.failed(attemptKey);
             throw BusinessException.unauthorized("invalid_credentials", INVALID_CREDENTIALS);
         }
-        if (customerOnly && (!user.roles().contains(Role.CUSTOMER) || user.customerId() == null)) {
+        boolean customerAccount = user.roles().size() == 1 && user.roles().contains(Role.CUSTOMER)
+                && user.customerId() != null;
+        if ((customerOnly && !customerAccount) || (!customerOnly && customerAccount)) {
             loginAttempts.failed(attemptKey);
             throw BusinessException.unauthorized("invalid_credentials", INVALID_CREDENTIALS);
         }

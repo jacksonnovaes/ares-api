@@ -17,6 +17,7 @@ class TenantJpaEntity {
     @Enumerated(EnumType.STRING) @Column(nullable = false) TenantStatus status;
     @Column(name = "logo_url") String logoUrl;
     @Column(name = "primary_color") String primaryColor;
+    @Column(name = "require_assets", nullable = false) boolean requireAssets;
     @Column(name = "created_at", nullable = false) Instant createdAt;
     @Column(name = "updated_at", nullable = false) Instant updatedAt;
 

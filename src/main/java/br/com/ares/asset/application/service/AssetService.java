@@ -1,6 +1,7 @@
 package br.com.ares.asset.application.service;
 
 import br.com.ares.asset.application.port.in.AssetDirectory;
+import br.com.ares.asset.application.port.in.AssetTypeDirectory;
 import br.com.ares.asset.application.port.in.AssetUseCase;
 import br.com.ares.asset.application.port.out.AssetRepository;
 import br.com.ares.asset.domain.model.Asset;
@@ -20,14 +21,16 @@ import java.util.UUID;
 @Service
 public class AssetService implements AssetUseCase, AssetDirectory {
     private final AssetRepository repository;
+    private final AssetTypeDirectory assetTypes;
     private final CustomerDirectory customers;
     private final CurrentActorProvider currentActor;
     private final AuditLogPort audit;
     private final Clock clock;
 
-    public AssetService(AssetRepository repository, CustomerDirectory customers,
+    public AssetService(AssetRepository repository, AssetTypeDirectory assetTypes, CustomerDirectory customers,
                         CurrentActorProvider currentActor, AuditLogPort audit, Clock clock) {
         this.repository = repository;
+        this.assetTypes = assetTypes;
         this.customers = customers;
         this.currentActor = currentActor;
         this.audit = audit;
@@ -41,8 +44,9 @@ public class AssetService implements AssetUseCase, AssetDirectory {
         if (!customers.exists(actor.tenantId(), command.customerId())) {
             throw BusinessException.notFound("customer_not_found", "Cliente não encontrado.");
         }
+        String type = assetTypes.requiredActive(actor.tenantId(), command.type()).code();
         Instant now = clock.instant();
-        var asset = new Asset(UUID.randomUUID(), actor.tenantId(), command.customerId(), command.type(),
+        var asset = new Asset(UUID.randomUUID(), actor.tenantId(), command.customerId(), type,
                 command.name().trim(), command.brand(), command.model(), command.serialNumber(),
                 command.attributes() == null ? Map.of() : Map.copyOf(command.attributes()), now, now);
         asset = repository.save(asset);

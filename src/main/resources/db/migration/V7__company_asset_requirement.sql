@@ -1,0 +1,2 @@
+ALTER TABLE tenants
+    ADD COLUMN require_assets BOOLEAN NOT NULL DEFAULT TRUE;
