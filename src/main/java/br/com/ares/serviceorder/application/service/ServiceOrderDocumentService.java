@@ -94,7 +94,9 @@ public class ServiceOrderDocumentService implements ServiceOrderDocumentUseCase 
                         customer.phone()),
                 assetView,
                 order.quoteLines().stream().map(line -> new QuoteLineView(line.serviceId(), line.description(),
-                        line.quantity(), line.unit(), line.unitPrice(), line.total())).toList()
+                        line.quantity(), line.unit(), line.unitPrice(), line.calculationMethod(),
+                        line.widthMeters(), line.lengthMeters(), line.heightMeters(),
+                        line.billableQuantity(), line.total())).toList()
         );
     }
 
@@ -147,10 +149,27 @@ public class ServiceOrderDocumentService implements ServiceOrderDocumentUseCase 
         }
 
         body.append("\nItens do orçamento:\n");
-        document.quoteLines().forEach(line -> body.append("- ").append(line.description())
-                .append(": ").append(line.quantity().stripTrailingZeros().toPlainString()).append(' ')
-                .append(line.unit()).append(" × ").append(formatMoney(line.unitPrice()))
-                .append(" = ").append(formatMoney(line.total())).append('\n'));
+        document.quoteLines().forEach(line -> {
+            body.append("- ").append(line.description()).append(": ");
+            if (line.calculationMethod() == br.com.ares.tenant.domain.model.QuoteCalculationMethod.SQUARE_METER) {
+                body.append(line.quantity().stripTrailingZeros().toPlainString()).append(" peça(s) × ")
+                        .append(line.widthMeters().stripTrailingZeros().toPlainString()).append(" m × ")
+                        .append(line.lengthMeters().stripTrailingZeros().toPlainString()).append(" m = ")
+                        .append(line.billableQuantity().stripTrailingZeros().toPlainString()).append(" m² × ");
+            } else if (line.calculationMethod()
+                    == br.com.ares.tenant.domain.model.QuoteCalculationMethod.CUBIC_METER) {
+                body.append(line.quantity().stripTrailingZeros().toPlainString()).append(" peça(s) × ")
+                        .append(line.widthMeters().stripTrailingZeros().toPlainString()).append(" m × ")
+                        .append(line.lengthMeters().stripTrailingZeros().toPlainString()).append(" m × ")
+                        .append(line.heightMeters().stripTrailingZeros().toPlainString()).append(" m = ")
+                        .append(line.billableQuantity().stripTrailingZeros().toPlainString()).append(" m³ × ");
+            } else {
+                body.append(line.quantity().stripTrailingZeros().toPlainString()).append(' ')
+                        .append(line.unit()).append(" × ");
+            }
+            body.append(formatMoney(line.unitPrice()))
+                    .append(" = ").append(formatMoney(line.total())).append('\n');
+        });
 
         if (order.estimatedValue() != null) {
             body.append("\nValor estimado: ").append(formatMoney(order.estimatedValue())).append('\n');

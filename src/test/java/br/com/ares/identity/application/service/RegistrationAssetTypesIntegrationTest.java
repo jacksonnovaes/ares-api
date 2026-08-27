@@ -5,6 +5,7 @@ import br.com.ares.asset.domain.model.AssetType;
 import br.com.ares.identity.application.port.in.RegistrationUseCase;
 import br.com.ares.serviceorder.application.port.out.ServiceOrderStatusRepository;
 import br.com.ares.serviceorder.domain.model.ServiceOrderStatusDefinition;
+import br.com.ares.tenant.domain.model.SubscriptionPlan;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -22,8 +23,16 @@ class RegistrationAssetTypesIntegrationTest {
     void provisionsDefaultAssetTypesWhenATenantIsRegistered() {
         var result = registration.register(new RegistrationUseCase.RegisterTenantAdminCommand(
                 "Ares Testes Ltda.", "Ares Testes", "ares-testes", "12345678000190",
-                null, "#2457E6", "Admin Teste", "admin-integration@example.com",
+                null, "#2457E6", SubscriptionPlan.PROFESSIONAL, "11999999999", "BEMVINDO20", true,
+                true, true, "2026-08-27", "2026-08-27", "127.0.0.1", "JUnit",
+                "Admin Teste", "admin-integration@example.com",
                 "SenhaForte#123", "SenhaForte#123"));
+
+        assertThat(result.plan()).isEqualTo(SubscriptionPlan.PROFESSIONAL);
+        assertThat(result.subscriptionActive()).isTrue();
+        assertThat(result.subscriptionPaidUntil()).isNotNull();
+        assertThat(result.monthlyPrice()).isEqualByComparingTo("79.92");
+        assertThat(result.couponCode()).isEqualTo("BEMVINDO20");
 
         assertThat(assetTypes.findAllByTenantId(result.tenantId()))
                 .hasSize(6)

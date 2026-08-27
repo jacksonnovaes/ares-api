@@ -30,7 +30,9 @@ class ServiceOrderPersistenceAdapter implements ServiceOrderRepository{
             e.assignedTechnicianId,e.openedAt,e.dueAt,e.completedAt,e.createdAt,e.updatedAt);}
     private ServiceOrderLineJpaEmbeddable toLineEntity(ServiceOrderLine v){var e=new ServiceOrderLineJpaEmbeddable();
         e.serviceId=v.serviceId();e.description=v.description();e.quantity=v.quantity();e.unit=v.unit();
-        e.unitPrice=v.unitPrice();return e;}
+        e.unitPrice=v.unitPrice();e.calculationMethod=v.calculationMethod();e.widthMeters=v.widthMeters();
+        e.lengthMeters=v.lengthMeters();e.heightMeters=v.heightMeters();return e;}
     private ServiceOrderLine toLineDomain(ServiceOrderLineJpaEmbeddable e){return new ServiceOrderLine(e.serviceId,
-            e.description,e.quantity,e.unit,e.unitPrice);}
+            e.description,e.quantity,e.unit,e.unitPrice,e.calculationMethod,e.widthMeters,e.lengthMeters,
+            e.heightMeters);}
 }

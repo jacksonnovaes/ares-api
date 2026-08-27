@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.time.Clock;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -39,6 +40,14 @@ class AuditLogAdapter implements AuditLogPort {
         entity.detailsJson = json(details);
         entity.occurredAt = clock.instant();
         repository.save(entity);
+    }
+
+    @Override
+    public List<AuditEventView> findAllByTenantId(UUID tenantId) {
+        return repository.findAllByTenantIdOrderByOccurredAtAsc(tenantId).stream()
+                .map(entity -> new AuditEventView(entity.id, entity.actorId, entity.action,
+                        entity.resourceType, entity.resourceId, entity.detailsJson, entity.occurredAt))
+                .toList();
     }
 
     private String json(Map<String, Object> details) {

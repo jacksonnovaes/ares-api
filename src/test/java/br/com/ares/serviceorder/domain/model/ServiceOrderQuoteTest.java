@@ -1,6 +1,7 @@
 package br.com.ares.serviceorder.domain.model;
 
 import br.com.ares.shared.domain.BusinessException;
+import br.com.ares.tenant.domain.model.QuoteCalculationMethod;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -40,6 +41,35 @@ class ServiceOrderQuoteTest {
         assertThatThrownBy(() -> order().replaceQuote(List.of(), order().assetId(), NOW))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("pelo menos uma linha");
+    }
+
+    @Test
+    void calculatesSquareMetersFromPiecesWidthAndHeight() {
+        var line = new ServiceOrderLine(null, "Instalação de revestimento", new BigDecimal("3"),
+                "M2", new BigDecimal("80.00"), QuoteCalculationMethod.SQUARE_METER,
+                new BigDecimal("2.5"), new BigDecimal("1.2"), null);
+
+        assertThat(line.billableQuantity()).isEqualByComparingTo("9.0");
+        assertThat(line.total()).isEqualByComparingTo("720.00");
+    }
+
+    @Test
+    void rejectsSquareMeterCalculationWithoutDimensions() {
+        assertThatThrownBy(() -> new ServiceOrderLine(null, "Pintura", BigDecimal.ONE,
+                "M2", new BigDecimal("45.00"), QuoteCalculationMethod.SQUARE_METER,
+                null, new BigDecimal("2"), null))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("largura e comprimento");
+    }
+
+    @Test
+    void calculatesCubicMetersForBricklayerWork() {
+        var line = new ServiceOrderLine(null, "Concretagem", BigDecimal.ONE,
+                "M3", new BigDecimal("500.00"), QuoteCalculationMethod.CUBIC_METER,
+                new BigDecimal("4"), new BigDecimal("2.5"), new BigDecimal("0.2"));
+
+        assertThat(line.billableQuantity()).isEqualByComparingTo("2.0");
+        assertThat(line.total()).isEqualByComparingTo("1000.00");
     }
 
     private ServiceOrder order() {

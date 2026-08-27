@@ -3,6 +3,7 @@ package br.com.ares.serviceorder.adapter.in.web;
 import br.com.ares.serviceorder.application.port.in.ServiceOrderUseCase;
 import br.com.ares.serviceorder.application.port.in.ServiceOrderDocumentUseCase;
 import br.com.ares.serviceorder.domain.model.*;
+import br.com.ares.tenant.domain.model.QuoteCalculationMethod;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import org.springframework.http.HttpStatus;
@@ -47,7 +48,8 @@ public class ServiceOrderController{
             new ServiceOrderUseCase.UpdateQuoteCommand(r.assetId(),toCommands(r.lines())));}
     private List<ServiceOrderUseCase.QuoteLineCommand> toCommands(List<QuoteLineRequest> lines){return lines.stream()
             .map(line->new ServiceOrderUseCase.QuoteLineCommand(line.serviceId(),line.description(),line.quantity(),
-                    line.unit(),line.unitPrice())).toList();}
+                    line.unit(),line.unitPrice(),line.calculationMethod(),line.widthMeters(),
+                    line.lengthMeters(),line.heightMeters())).toList();}
     record CreateOrderRequest(@NotNull UUID customerId,UUID assetId,
             @NotEmpty @Size(max=100) List<@Valid QuoteLineRequest> lines,
             @NotBlank @Size(max=180)String title,@Size(max=4000)String description,
@@ -57,7 +59,11 @@ public class ServiceOrderController{
     record QuoteLineRequest(UUID serviceId,@NotBlank @Size(max=500)String description,
             @NotNull @DecimalMin("0.001") @Digits(integer=9,fraction=3)BigDecimal quantity,
             @NotBlank @Size(max=20)String unit,
-            @NotNull @DecimalMin("0.00") @Digits(integer=13,fraction=2)BigDecimal unitPrice){}
+            @NotNull @DecimalMin("0.00") @Digits(integer=13,fraction=2)BigDecimal unitPrice,
+            QuoteCalculationMethod calculationMethod,
+            @DecimalMin("0.001") @Digits(integer=9,fraction=3)BigDecimal widthMeters,
+            @DecimalMin("0.001") @Digits(integer=9,fraction=3)BigDecimal lengthMeters,
+            @DecimalMin("0.001") @Digits(integer=9,fraction=3)BigDecimal heightMeters){}
     record ChangeStatusRequest(@NotBlank @Size(max=50)String status,@DecimalMin("0.00")BigDecimal finalValue){}
     record SendEmailRequest(@Email @Size(max=254) String recipient){}
 }

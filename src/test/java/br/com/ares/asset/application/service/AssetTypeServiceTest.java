@@ -86,6 +86,11 @@ class AssetTypeServiceTest {
                            String resourceId, Map<String, Object> details) {
             actions.add(action);
         }
+
+        @Override
+        public List<AuditEventView> findAllByTenantId(UUID tenantId) {
+            return List.of();
+        }
     }
 
     private static final class InMemoryAssetTypeRepository implements AssetTypeRepository {

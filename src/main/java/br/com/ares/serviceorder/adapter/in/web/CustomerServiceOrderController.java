@@ -4,6 +4,7 @@ import br.com.ares.serviceorder.application.port.in.ServiceOrderUseCase;
 import br.com.ares.serviceorder.application.port.in.ServiceOrderStatusDirectory;
 import br.com.ares.serviceorder.domain.model.ServiceOrder;
 import br.com.ares.serviceorder.domain.model.ServiceOrderPriority;
+import br.com.ares.tenant.domain.model.QuoteCalculationMethod;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -65,7 +66,9 @@ public class CustomerServiceOrderController {
         static CustomerServiceOrderView from(ServiceOrder order, String statusName) {
             return new CustomerServiceOrderView(order.id(), order.assetId(), order.serviceIds(),
                     order.quoteLines().stream().map(line -> new CustomerQuoteLineView(line.description(),
-                            line.quantity(), line.unit(), line.unitPrice(), line.total())).toList(),
+                            line.quantity(), line.unit(), line.unitPrice(), line.calculationMethod(),
+                            line.widthMeters(), line.lengthMeters(), line.heightMeters(),
+                            line.billableQuantity(), line.total())).toList(),
                     order.title(), order.description(), order.status(), statusName, order.priority(),
                     order.estimatedValue(), order.finalValue(), order.openedAt(), order.dueAt(),
                     order.completedAt(), order.createdAt(), order.updatedAt());
@@ -73,6 +76,8 @@ public class CustomerServiceOrderController {
     }
 
     record CustomerQuoteLineView(String description, BigDecimal quantity, String unit,
-                                 BigDecimal unitPrice, BigDecimal total) {
+                                 BigDecimal unitPrice, QuoteCalculationMethod calculationMethod,
+                                 BigDecimal widthMeters, BigDecimal lengthMeters, BigDecimal heightMeters,
+                                 BigDecimal billableQuantity, BigDecimal total) {
     }
 }

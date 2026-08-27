@@ -1,6 +1,7 @@
 package br.com.ares.serviceorder.application.port.in;
 
 import br.com.ares.serviceorder.domain.model.ServiceOrderPriority;
+import br.com.ares.tenant.domain.model.QuoteCalculationMethod;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -78,6 +79,11 @@ public interface ServiceOrderDocumentUseCase {
             BigDecimal quantity,
             String unit,
             BigDecimal unitPrice,
+            QuoteCalculationMethod calculationMethod,
+            BigDecimal widthMeters,
+            BigDecimal lengthMeters,
+            BigDecimal heightMeters,
+            BigDecimal billableQuantity,
             BigDecimal total
     ) {
     }

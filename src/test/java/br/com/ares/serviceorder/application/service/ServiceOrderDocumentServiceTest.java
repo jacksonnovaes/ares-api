@@ -23,6 +23,7 @@ import br.com.ares.shared.domain.BusinessException;
 import br.com.ares.tenant.application.port.in.TenantManagementUseCase;
 import br.com.ares.tenant.domain.model.Tenant;
 import br.com.ares.tenant.domain.model.TenantStatus;
+import br.com.ares.tenant.domain.model.SubscriptionPlan;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -131,7 +132,10 @@ class ServiceOrderDocumentServiceTest {
         UUID assetId = UUID.randomUUID();
         UUID serviceId = UUID.randomUUID();
         var tenant = new Tenant(tenantId, "Ares Serviços Ltda.", "Oficina Ares", "oficina-ares",
-                "12345678000190", TenantStatus.ACTIVE, null, "#2457E6", true, NOW, NOW);
+                "12345678000190", TenantStatus.ACTIVE, null, "#2457E6", true,
+                SubscriptionPlan.PROFESSIONAL, true, NOW.plusSeconds(2_592_000),
+                new BigDecimal("99.90"), null, BigDecimal.ZERO.setScale(2),
+                br.com.ares.tenant.domain.model.QuoteCalculationMethod.QUANTITY, null, null, NOW, NOW);
         var customer = new Customer(customerId, tenantId, CustomerType.PERSON, "Maria da Silva",
                 "12345678901", "cliente@example.com", "11999999999", null, CustomerStatus.ACTIVE, NOW, NOW);
         var assetType = new AssetType(UUID.randomUUID(), tenantId, "VEHICLE", "Veículo", true, true, NOW, NOW);

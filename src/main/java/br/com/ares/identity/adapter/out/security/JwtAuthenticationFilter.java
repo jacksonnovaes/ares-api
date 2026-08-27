@@ -27,6 +27,9 @@ class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final Set<String> PUBLIC_PATHS = Set.of(
             "/api/v1/tenants/register",
+            "/api/v1/tenants/registration-config",
+            "/api/v1/tenants/plan-whatsapp-simulation",
+            "/api/v1/tenants/coupon-validation",
             "/api/v1/branding",
             "/api/v1/auth/login",
             "/api/v1/customer/auth/login",
