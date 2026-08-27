@@ -2,7 +2,9 @@ spring:
   application:
     name: ares-api
   datasource:
-    url: ${DB_URL:postgres://postgres:J1ck50nb#J1ck50nb@ares_aresdb:5432/ares?sslmode=disable}
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
   jpa:
     open-in-view: false
     hibernate:
