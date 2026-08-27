@@ -4,6 +4,7 @@ import br.com.ares.identity.application.port.in.AuthUseCase;
 import br.com.ares.identity.application.port.out.*;
 import br.com.ares.identity.domain.model.PasswordReset;
 import br.com.ares.identity.domain.model.RefreshSession;
+import br.com.ares.identity.domain.model.Role;
 import br.com.ares.identity.domain.model.User;
 import br.com.ares.identity.domain.service.PasswordPolicy;
 import br.com.ares.shared.application.AuditLogPort;
@@ -70,6 +71,16 @@ public class AuthService implements AuthUseCase {
     @Override
     @Transactional
     public AuthenticationResult authenticate(LoginCommand command) {
+        return authenticate(command, false);
+    }
+
+    @Override
+    @Transactional
+    public AuthenticationResult authenticateCustomer(LoginCommand command) {
+        return authenticate(command, true);
+    }
+
+    private AuthenticationResult authenticate(LoginCommand command, boolean customerOnly) {
         String email = normalizeEmail(command.email());
         String attemptKey = email + "|" + command.clientKey();
         if (loginAttempts.isBlocked(attemptKey)) {
@@ -78,6 +89,12 @@ public class AuthService implements AuthUseCase {
         }
         User user = users.findByEmail(email).orElse(null);
         if (user == null || !passwordHasher.matches(command.password(), user.passwordHash())) {
+            loginAttempts.failed(attemptKey);
+            throw BusinessException.unauthorized("invalid_credentials", INVALID_CREDENTIALS);
+        }
+        boolean customerAccount = user.roles().size() == 1 && user.roles().contains(Role.CUSTOMER)
+                && user.customerId() != null;
+        if ((customerOnly && !customerAccount) || (!customerOnly && customerAccount)) {
             loginAttempts.failed(attemptKey);
             throw BusinessException.unauthorized("invalid_credentials", INVALID_CREDENTIALS);
         }

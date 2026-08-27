@@ -15,9 +15,11 @@ class ServiceCatalogPersistenceAdapter implements ServiceCatalogRepository {
     @Override public List<CatalogService> findAllByTenantId(UUID tenantId){return repository
             .findAllByTenantIdOrderByNameAsc(tenantId).stream().map(this::toDomain).toList();}
     @Override public long countActiveByTenantIdAndIds(UUID tenantId,Set<UUID> ids){return repository.countActive(tenantId,ids);}
+    @Override public boolean existsMaintenanceByTenantIdAndIds(UUID tenantId,Set<UUID> ids){return repository
+            .existsActiveMaintenance(tenantId,ids);}
     private CatalogServiceJpaEntity toEntity(CatalogService v){var e=new CatalogServiceJpaEntity();e.id=v.id();
         e.tenantId=v.tenantId();e.name=v.name();e.description=v.description();e.basePrice=v.basePrice();
-        e.estimatedMinutes=v.estimatedMinutes();e.active=v.active();e.createdAt=v.createdAt();e.updatedAt=v.updatedAt();return e;}
+        e.estimatedMinutes=v.estimatedMinutes();e.type=v.type();e.active=v.active();e.createdAt=v.createdAt();e.updatedAt=v.updatedAt();return e;}
     private CatalogService toDomain(CatalogServiceJpaEntity e){return new CatalogService(e.id,e.tenantId,e.name,
-            e.description,e.basePrice,e.estimatedMinutes,e.active,e.createdAt,e.updatedAt);}
+            e.description,e.basePrice,e.estimatedMinutes,e.type,e.active,e.createdAt,e.updatedAt);}
 }

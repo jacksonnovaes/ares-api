@@ -9,4 +9,6 @@ interface SpringDataCatalogServiceRepository extends JpaRepository<CatalogServic
     List<CatalogServiceJpaEntity> findAllByTenantIdOrderByNameAsc(UUID tenantId);
     @Query("select count(c) from CatalogServiceJpaEntity c where c.tenantId=:tenantId and c.id in :ids and c.active=true")
     long countActive(@Param("tenantId") UUID tenantId,@Param("ids") Set<UUID> ids);
+    @Query("select (count(c) > 0) from CatalogServiceJpaEntity c where c.tenantId=:tenantId and c.id in :ids and c.active=true and c.type=br.com.ares.servicecatalog.domain.model.CatalogServiceType.MAINTENANCE")
+    boolean existsActiveMaintenance(@Param("tenantId") UUID tenantId,@Param("ids") Set<UUID> ids);
 }

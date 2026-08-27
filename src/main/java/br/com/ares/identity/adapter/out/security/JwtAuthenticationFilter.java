@@ -19,10 +19,25 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Set;
 import java.util.UUID;
 
 @Component
 class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    private static final Set<String> PUBLIC_PATHS = Set.of(
+            "/api/v1/tenants/register",
+            "/api/v1/tenants/registration-config",
+            "/api/v1/tenants/plan-whatsapp-simulation",
+            "/api/v1/tenants/coupon-validation",
+            "/api/v1/branding",
+            "/api/v1/auth/login",
+            "/api/v1/customer/auth/login",
+            "/api/v1/auth/refresh",
+            "/api/v1/auth/logout",
+            "/api/v1/auth/forgot-password",
+            "/api/v1/auth/reset-password"
+    );
 
     private final JwtDecoder decoder;
     private final IdentityAccessService identityAccess;
@@ -33,6 +48,15 @@ class JwtAuthenticationFilter extends OncePerRequestFilter {
         this.decoder = decoder;
         this.identityAccess = identityAccess;
         this.entryPoint = entryPoint;
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        return PUBLIC_PATHS.contains(path)
+                || path.startsWith("/actuator/health/")
+                || path.startsWith("/v3/api-docs/")
+                || path.startsWith("/swagger-ui/");
     }
 
     @Override

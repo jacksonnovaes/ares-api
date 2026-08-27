@@ -5,4 +5,5 @@ import java.util.UUID;
 
 public interface ServiceCatalogDirectory {
     boolean allExistAndActive(UUID tenantId, Set<UUID> serviceIds);
+    boolean anyRequiresAsset(UUID tenantId, Set<UUID> serviceIds);
 }

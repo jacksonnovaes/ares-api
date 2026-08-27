@@ -9,12 +9,15 @@ import java.util.*;
 @Entity @Table(name="service_orders")
 class ServiceOrderJpaEntity {
     @Id UUID id;@Column(name="tenant_id",nullable=false)UUID tenantId;
-    @Column(name="customer_id",nullable=false)UUID customerId;@Column(name="asset_id",nullable=false)UUID assetId;
+    @Column(name="customer_id",nullable=false)UUID customerId;@Column(name="asset_id")UUID assetId;
     @ElementCollection(fetch=FetchType.EAGER) @CollectionTable(name="service_order_services",
             joinColumns=@JoinColumn(name="service_order_id")) @Column(name="service_id",nullable=false)
     Set<UUID> serviceIds=new LinkedHashSet<>();
+    @ElementCollection(fetch=FetchType.EAGER) @CollectionTable(name="service_order_lines",
+            joinColumns=@JoinColumn(name="service_order_id")) @OrderColumn(name="line_position")
+    List<ServiceOrderLineJpaEmbeddable> quoteLines=new ArrayList<>();
     @Column(nullable=false)String title;@Column(columnDefinition="text")String description;
-    @Enumerated(EnumType.STRING)@Column(nullable=false)ServiceOrderStatus status;
+    @Column(nullable=false,length=50)String status;
     @Enumerated(EnumType.STRING)@Column(nullable=false)ServiceOrderPriority priority;
     @Column(name="estimated_value")BigDecimal estimatedValue;@Column(name="final_value")BigDecimal finalValue;
     @Column(name="assigned_technician_id")UUID assignedTechnicianId;

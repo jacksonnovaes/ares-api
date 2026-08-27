@@ -8,4 +8,5 @@ public interface ServiceCatalogRepository {
     Optional<CatalogService> findByIdAndTenantId(UUID id, UUID tenantId);
     List<CatalogService> findAllByTenantId(UUID tenantId);
     long countActiveByTenantIdAndIds(UUID tenantId, Set<UUID> ids);
+    boolean existsMaintenanceByTenantIdAndIds(UUID tenantId, Set<UUID> ids);
 }

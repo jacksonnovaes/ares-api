@@ -8,6 +8,7 @@ import java.util.UUID;
 
 public interface AuthUseCase {
     AuthenticationResult authenticate(LoginCommand command);
+    AuthenticationResult authenticateCustomer(LoginCommand command);
     AuthenticationResult refresh(String refreshToken);
     void logout(String refreshToken);
     void forgotPassword(String email);

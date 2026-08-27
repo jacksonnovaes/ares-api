@@ -34,6 +34,15 @@ server:
     include-message: always
 
 ares:
+  features:
+    subscription-payment-simulation-enabled: true
+  legal:
+    terms-version: 2026-08-27
+    privacy-version: 2026-08-27
+  promotions:
+    coupon-code: BEMVINDO20
+    discount-percentage: 20
+    valid-until: 2099-12-31
   security:
     issuer: ares-test
     secret-base64: ${JWT_SECRET_BASE64:VGhpcy1pcy1hLXRlc3Qtc2VjcmV0LWtleS10aGF0LWlzLWxvbmctZW5vdWdoLWFiY2RlZg==}

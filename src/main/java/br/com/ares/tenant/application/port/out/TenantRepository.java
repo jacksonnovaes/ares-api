@@ -11,4 +11,5 @@ public interface TenantRepository {
     Optional<Tenant> findBySlug(String slug);
     boolean existsBySlug(String slug);
     boolean existsByDocument(String document);
+    void deleteAllData(UUID tenantId);
 }

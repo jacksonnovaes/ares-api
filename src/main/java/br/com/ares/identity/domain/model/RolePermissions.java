@@ -34,8 +34,7 @@ public final class RolePermissions {
                     Permission.SERVICE_ORDER_READ, Permission.SERVICE_ORDER_UPDATE);
             case FINANCIAL -> EnumSet.of(
                     Permission.PAYMENT_READ, Permission.PAYMENT_CREATE, Permission.REPORT_READ);
-            case CUSTOMER -> EnumSet.of(
-                    Permission.ASSET_READ, Permission.SERVICE_ORDER_READ, Permission.PAYMENT_READ);
+            case CUSTOMER -> EnumSet.of(Permission.SERVICE_ORDER_READ);
         };
     }
 }

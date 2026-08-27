@@ -5,3 +5,5 @@ target/
 .env
 *.log
 data/
+frontend/
+.env

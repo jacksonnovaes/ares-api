@@ -2,7 +2,6 @@ package br.com.ares.asset.adapter.in.web;
 
 import br.com.ares.asset.application.port.in.AssetUseCase;
 import br.com.ares.asset.domain.model.Asset;
-import br.com.ares.asset.domain.model.AssetType;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import org.springframework.http.HttpStatus;
@@ -40,7 +39,8 @@ public class AssetController {
         return assets.get(id);
     }
 
-    record CreateAssetRequest(@NotNull UUID customerId, @NotNull AssetType type,
+    record CreateAssetRequest(@NotNull UUID customerId,
+                              @NotBlank @Pattern(regexp = "[A-Za-z0-9_]{1,50}") String type,
                               @NotBlank @Size(max = 160) String name, @Size(max = 100) String brand,
                               @Size(max = 100) String model, @Size(max = 120) String serialNumber,
                               Map<String, String> attributes) {
