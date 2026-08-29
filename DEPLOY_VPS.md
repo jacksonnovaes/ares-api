@@ -205,6 +205,7 @@ Em uma máquina confiável, gere uma chave exclusiva para o deploy:
 ssh-keygen -t ed25519 -C "github-actions-ares" -f ./ares_github_actions -N ""
 ssh-copy-id -i ./ares_github_actions.pub root@2.25.121.228
 ssh-keyscan -H 2.25.121.228 > ./ares_known_hosts
+base64 < ./ares_github_actions | tr -d '\n' > ./ares_github_actions.b64
 ```
 
 Não adicione nenhum desses arquivos ao Git. Guarde a chave privada em local
@@ -217,12 +218,16 @@ o ambiente `production` e adicione os mesmos secrets:
 
 | Secret | Conteúdo |
 | --- | --- |
-| `VPS_SSH_PRIVATE_KEY` | Conteúdo completo do arquivo `ares_github_actions` |
+| `VPS_SSH_PRIVATE_KEY_B64` | Conteúdo de `ares_github_actions.b64` |
 | `VPS_KNOWN_HOSTS` | Conteúdo completo do arquivo `ares_known_hosts` |
 | `CROSS_REPOSITORY_TOKEN` | Fine-grained PAT com `Contents: Read` nos repositórios `ares-api` e `aresweb` |
 
 O token de repositório cruzado é necessário porque cada workflow baixa o outro
 repositório privado. Não conceda permissão de escrita a esse token.
+
+A chave privada é armazenada em Base64 para preservar exatamente as quebras de
+linha do arquivo OpenSSH. O workflow decodifica e valida a chave com
+`ssh-keygen` antes de tentar a conexão.
 
 Antes do primeiro push, deixe a automação desativada. Depois que os arquivos
 estiverem enviados aos dois repositórios e os secrets estiverem configurados,
