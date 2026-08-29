@@ -42,7 +42,7 @@ services:
       context: .
     environment:
       SPRING_PROFILES_ACTIVE: test
-      JWT_SECRET_BASE64: ${JWT_SECRET_BASE64:-VGhpcy1pcy1hLWRldmVsb3BtZW50LWtleS1jaGFuZ2UtaXQtaW4tcHJvZHVjdGlvbi0xMjM0NTY=}
+      JWT_SECRET_BASE64: -VGhpcy1pcy1hLWRldmVsb3BtZW50LWtleS1jaGFuZ2UtaXQtaW4tcHJvZHVjdGlvbi0xMjM0NTY=
     ports:
       - "${TEST_API_PORT:-8081}:8080"
     healthcheck:
