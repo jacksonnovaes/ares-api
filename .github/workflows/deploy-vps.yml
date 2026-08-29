@@ -1,0 +1,116 @@
+name: Deploy production VPS
+
+on:
+  push:
+    branches:
+      - development
+  workflow_dispatch:
+
+concurrency:
+  group: ares-production-${{ github.repository }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    if: vars.DEPLOY_ENABLED == 'true'
+    name: Validate and deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment: production
+
+    env:
+      DEPLOY_HOST: 2.25.121.228
+      DEPLOY_PORT: "22"
+      DEPLOY_USER: root
+      DEPLOY_ROOT: /opt/ares
+
+    steps:
+      - name: Checkout API
+        uses: actions/checkout@v7
+        with:
+          path: bundle/ares-api
+          persist-credentials: false
+
+      - name: Checkout frontend
+        uses: actions/checkout@v7
+        with:
+          repository: jacksonnovaes/aresweb
+          ref: develop
+          path: bundle/aresweb
+          token: ${{ secrets.CROSS_REPOSITORY_TOKEN }}
+          persist-credentials: false
+
+      - name: Validate and build images
+        working-directory: bundle/ares-api
+        run: |
+          set -Eeuo pipefail
+          docker compose \
+            --env-file .env.production.example \
+            -f compose.production.yml \
+            config --quiet
+          docker compose \
+            --env-file .env.production.example \
+            -f compose.production.yml \
+            build api web
+
+      - name: Create release archive
+        run: |
+          set -Eeuo pipefail
+          release_id="${GITHUB_REPOSITORY#*/}-${GITHUB_SHA}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          archive_path="${RUNNER_TEMP}/${release_id}.tar.gz"
+          tar \
+            --exclude=.git \
+            --exclude=node_modules \
+            --exclude=.next \
+            --exclude=target \
+            --exclude=.env \
+            --exclude=.env.production \
+            --exclude=.agents \
+            --exclude=.codex \
+            --exclude=.idea \
+            --exclude=work \
+            --exclude=outputs \
+            -czf "${archive_path}" \
+            -C bundle ares-api aresweb
+          echo "RELEASE_ID=${release_id}" >> "${GITHUB_ENV}"
+          echo "DEPLOY_ARCHIVE=${archive_path}" >> "${GITHUB_ENV}"
+
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+        run: |
+          set -Eeuo pipefail
+          test -n "${SSH_PRIVATE_KEY}" || { echo "Secret VPS_SSH_PRIVATE_KEY ausente"; exit 1; }
+          test -n "${SSH_KNOWN_HOSTS}" || { echo "Secret VPS_KNOWN_HOSTS ausente"; exit 1; }
+          install -d -m 700 "${HOME}/.ssh"
+          install -m 600 /dev/null "${HOME}/.ssh/ares_deploy"
+          printf '%s\n' "${SSH_PRIVATE_KEY}" > "${HOME}/.ssh/ares_deploy"
+          install -m 600 /dev/null "${HOME}/.ssh/known_hosts"
+          printf '%s\n' "${SSH_KNOWN_HOSTS}" > "${HOME}/.ssh/known_hosts"
+
+      - name: Upload release
+        run: |
+          set -Eeuo pipefail
+          scp \
+            -i "${HOME}/.ssh/ares_deploy" \
+            -P "${DEPLOY_PORT}" \
+            -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes \
+            "${DEPLOY_ARCHIVE}" \
+            "${DEPLOY_USER}@${DEPLOY_HOST}:/tmp/${RELEASE_ID}.tar.gz"
+
+      - name: Deploy release
+        run: |
+          set -Eeuo pipefail
+          remote_release="${DEPLOY_ROOT}/releases/${RELEASE_ID}"
+          ssh \
+            -i "${HOME}/.ssh/ares_deploy" \
+            -p "${DEPLOY_PORT}" \
+            -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes \
+            "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "install -d -m 755 '${remote_release}' '${DEPLOY_ROOT}/shared' && tar -xzf '/tmp/${RELEASE_ID}.tar.gz' -C '${remote_release}' && bash '${remote_release}/ares-api/deploy/deploy-release.sh' '${remote_release}' '${DEPLOY_ROOT}/shared/.env.production' && rm -f '/tmp/${RELEASE_ID}.tar.gz'"
