@@ -47,10 +47,22 @@ docker compose \
   -f "${compose_file}" \
   pull postgres caddy
 
-docker compose \
+if ! docker compose \
   --env-file "${env_file}" \
   -f "${compose_file}" \
-  up -d --build --remove-orphans --wait --wait-timeout 300
+  up -d --build --remove-orphans --wait --wait-timeout 300; then
+  echo "Deploy não ficou saudável. Estado dos serviços:" >&2
+  docker compose \
+    --env-file "${env_file}" \
+    -f "${compose_file}" \
+    ps --all >&2 || true
+  echo "Últimos logs de PostgreSQL, API, frontend e Caddy:" >&2
+  docker compose \
+    --env-file "${env_file}" \
+    -f "${compose_file}" \
+    logs --no-color --tail=200 postgres api web caddy >&2 || true
+  exit 1
+fi
 
 ln -sfn "${release_dir}" "${deploy_root}/current"
 
