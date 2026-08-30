@@ -34,7 +34,9 @@ class PrivacyControllerIntegrationTest {
                                   "slug":"privacidade-testes",
                                   "document":"12345678000270",
                                   "primaryColor":"#2457E6",
-                                  "plan":"ESSENTIAL",
+                                  "plan":"SOLO",
+                                  "billingCycle":"MONTHLY",
+                                  "additionalUserSeats":0,
                                   "whatsapp":"11988887777",
                                   "couponCode":"BEMVINDO20",
                                   "simulatedPaymentApproved":true,
@@ -51,7 +53,7 @@ class PrivacyControllerIntegrationTest {
                                 }
                                 """))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.monthlyPrice").value(39.92));
+                .andExpect(jsonPath("$.price").value(23.92));
 
         String loginBody = mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)

@@ -2,6 +2,7 @@ package br.com.ares.tenant.domain.model;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Set;
 import java.util.UUID;
 
 public record Tenant(
@@ -15,12 +16,15 @@ public record Tenant(
         String primaryColor,
         boolean requireAssets,
         SubscriptionPlan subscriptionPlan,
+        SubscriptionBillingCycle subscriptionBillingCycle,
+        int additionalUserSeats,
         boolean subscriptionActive,
         Instant subscriptionPaidUntil,
-        BigDecimal subscriptionMonthlyPrice,
+        BigDecimal subscriptionPrice,
         String couponCode,
         BigDecimal couponDiscountPercentage,
         QuoteCalculationMethod quoteCalculationMethod,
+        Set<QuoteCalculationMethod> enabledQuoteCalculationMethods,
         BigDecimal defaultSquareMeterPrice,
         BigDecimal defaultCubicMeterPrice,
         Instant createdAt,
@@ -32,16 +36,23 @@ public record Tenant(
 
     public Tenant withRequireAssets(boolean value, Instant at) {
         return new Tenant(id, legalName, tradeName, slug, document, status, logoUrl, primaryColor, value,
-                subscriptionPlan, subscriptionActive, subscriptionPaidUntil, subscriptionMonthlyPrice,
-                couponCode, couponDiscountPercentage, quoteCalculationMethod, defaultSquareMeterPrice,
-                defaultCubicMeterPrice, createdAt, at);
+                subscriptionPlan, subscriptionBillingCycle, additionalUserSeats, subscriptionActive,
+                subscriptionPaidUntil, subscriptionPrice,
+                couponCode, couponDiscountPercentage, quoteCalculationMethod, enabledQuoteCalculationMethods,
+                defaultSquareMeterPrice, defaultCubicMeterPrice, createdAt, at);
     }
 
     public Tenant withCompanySettings(boolean assetsRequired, QuoteCalculationMethod calculationMethod,
+                                      Set<QuoteCalculationMethod> enabledCalculationMethods,
                                       BigDecimal squareMeterPrice, BigDecimal cubicMeterPrice, Instant at) {
         return new Tenant(id, legalName, tradeName, slug, document, status, logoUrl, primaryColor, assetsRequired,
-                subscriptionPlan, subscriptionActive, subscriptionPaidUntil, subscriptionMonthlyPrice,
-                couponCode, couponDiscountPercentage, calculationMethod, squareMeterPrice, cubicMeterPrice,
-                createdAt, at);
+                subscriptionPlan, subscriptionBillingCycle, additionalUserSeats, subscriptionActive,
+                subscriptionPaidUntil, subscriptionPrice,
+                couponCode, couponDiscountPercentage, calculationMethod,
+                Set.copyOf(enabledCalculationMethods), squareMeterPrice, cubicMeterPrice, createdAt, at);
+    }
+
+    public int subscriptionUserLimit() {
+        return subscriptionPlan.includedUsers() + additionalUserSeats;
     }
 }

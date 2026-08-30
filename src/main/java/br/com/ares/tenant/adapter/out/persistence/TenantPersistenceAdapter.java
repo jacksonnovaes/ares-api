@@ -64,6 +64,7 @@ class TenantPersistenceAdapter implements TenantRepository {
         jdbc.update("DELETE FROM service_order_statuses WHERE tenant_id = ?", tenantId);
         jdbc.update("DELETE FROM asset_types WHERE tenant_id = ?", tenantId);
         jdbc.update("DELETE FROM audit_events WHERE tenant_id = ?", tenantId);
+        jdbc.update("DELETE FROM tenant_quote_calculation_methods WHERE tenant_id = ?", tenantId);
         jdbc.update("DELETE FROM tenants WHERE id = ?", tenantId);
     }
 
@@ -79,12 +80,16 @@ class TenantPersistenceAdapter implements TenantRepository {
         entity.primaryColor = tenant.primaryColor();
         entity.requireAssets = tenant.requireAssets();
         entity.subscriptionPlan = tenant.subscriptionPlan();
+        entity.subscriptionBillingCycle = tenant.subscriptionBillingCycle();
+        entity.additionalUserSeats = tenant.additionalUserSeats();
         entity.subscriptionActive = tenant.subscriptionActive();
         entity.subscriptionPaidUntil = tenant.subscriptionPaidUntil();
-        entity.subscriptionMonthlyPrice = tenant.subscriptionMonthlyPrice();
+        entity.subscriptionPrice = tenant.subscriptionPrice();
         entity.couponCode = tenant.couponCode();
         entity.couponDiscountPercentage = tenant.couponDiscountPercentage();
         entity.quoteCalculationMethod = tenant.quoteCalculationMethod();
+        entity.enabledQuoteCalculationMethods = new java.util.LinkedHashSet<>(
+                tenant.enabledQuoteCalculationMethods());
         entity.defaultSquareMeterPrice = tenant.defaultSquareMeterPrice();
         entity.defaultCubicMeterPrice = tenant.defaultCubicMeterPrice();
         entity.createdAt = tenant.createdAt();
@@ -95,8 +100,10 @@ class TenantPersistenceAdapter implements TenantRepository {
     private Tenant toDomain(TenantJpaEntity entity) {
         return new Tenant(entity.id, entity.legalName, entity.tradeName, entity.slug, entity.document,
                 entity.status, entity.logoUrl, entity.primaryColor, entity.requireAssets, entity.subscriptionPlan,
-                entity.subscriptionActive, entity.subscriptionPaidUntil, entity.subscriptionMonthlyPrice,
+                entity.subscriptionBillingCycle, entity.additionalUserSeats, entity.subscriptionActive,
+                entity.subscriptionPaidUntil, entity.subscriptionPrice,
                 entity.couponCode, entity.couponDiscountPercentage, entity.quoteCalculationMethod,
+                java.util.Set.copyOf(entity.enabledQuoteCalculationMethods),
                 entity.defaultSquareMeterPrice, entity.defaultCubicMeterPrice,
                 entity.createdAt, entity.updatedAt);
     }
