@@ -66,7 +66,7 @@ public class CustomerServiceOrderController {
         static CustomerServiceOrderView from(ServiceOrder order, String statusName) {
             return new CustomerServiceOrderView(order.id(), order.assetId(), order.serviceIds(),
                     order.quoteLines().stream().map(line -> new CustomerQuoteLineView(line.description(),
-                            line.quantity(), line.unit(), line.unitPrice(), line.calculationMethod(),
+                            line.notes(), line.quantity(), line.unit(), line.unitPrice(), line.calculationMethod(),
                             line.widthMeters(), line.lengthMeters(), line.heightMeters(),
                             line.billableQuantity(), line.total())).toList(),
                     order.title(), order.description(), order.status(), statusName, order.priority(),
@@ -75,7 +75,7 @@ public class CustomerServiceOrderController {
         }
     }
 
-    record CustomerQuoteLineView(String description, BigDecimal quantity, String unit,
+    record CustomerQuoteLineView(String description, String notes, BigDecimal quantity, String unit,
                                  BigDecimal unitPrice, QuoteCalculationMethod calculationMethod,
                                  BigDecimal widthMeters, BigDecimal lengthMeters, BigDecimal heightMeters,
                                  BigDecimal billableQuantity, BigDecimal total) {

@@ -89,6 +89,7 @@ class ServiceOrderDocumentServiceTest {
         assertThat(document.quoteLines()).singleElement()
                 .extracting(ServiceOrderDocumentUseCase.QuoteLineView::description)
                 .isEqualTo("Troca de óleo");
+        assertThat(document.quoteLines().getFirst().notes()).isEqualTo("Utilizar óleo sintético");
     }
 
     @Test
@@ -103,7 +104,8 @@ class ServiceOrderDocumentServiceTest {
         assertThat(result.deliveryMode()).isEqualTo("SIMULATION");
         assertThat(result.recipient()).isEqualTo("cliente@example.com");
         assertThat(result.subject()).contains("Ordem de serviço", "Oficina Ares");
-        assertThat(result.body()).contains("Revisão preventiva", "Troca de óleo", "R$ 350,00");
+        assertThat(result.body()).contains("Revisão preventiva", "Troca de óleo",
+                "Observações: Utilizar óleo sintético", "R$ 350,00");
         assertThat(result.processedAt()).isEqualTo(NOW);
 
         var message = ArgumentCaptor.forClass(ServiceOrderEmailSender.EmailMessage.class);
@@ -144,8 +146,9 @@ class ServiceOrderDocumentServiceTest {
         var assetType = new AssetType(UUID.randomUUID(), tenantId, "VEHICLE", "Veículo", true, true, NOW, NOW);
         var asset = new Asset(assetId, tenantId, customerId, "VEHICLE", "Veículo principal",
                 "Toyota", "Corolla", "ABC123", Map.of(), NOW, NOW);
-        var quoteLine = new ServiceOrderLine(serviceId, "Troca de óleo", BigDecimal.ONE,
-                "UN", new BigDecimal("350.00"));
+        var quoteLine = new ServiceOrderLine(serviceId, "Troca de óleo", "Utilizar óleo sintético",
+                BigDecimal.ONE, "UN", new BigDecimal("350.00"),
+                br.com.ares.tenant.domain.model.QuoteCalculationMethod.QUANTITY, null, null, null);
         var order = new ServiceOrder(UUID.randomUUID(), tenantId, customerId, assetId, Set.of(serviceId),
                 List.of(quoteLine), "Revisão preventiva", "Executar revisão completa", "OPEN",
                 ServiceOrderPriority.NORMAL, new BigDecimal("350.00"), null, null, NOW, NOW.plusSeconds(86400),

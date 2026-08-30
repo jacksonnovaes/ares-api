@@ -7,14 +7,21 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.UUID;
 
-public record ServiceOrderLine(UUID serviceId, String description, BigDecimal quantity,
+public record ServiceOrderLine(UUID serviceId, String description, String notes, BigDecimal quantity,
                                String unit, BigDecimal unitPrice, QuoteCalculationMethod calculationMethod,
                                BigDecimal widthMeters, BigDecimal lengthMeters, BigDecimal heightMeters) {
 
     public ServiceOrderLine(UUID serviceId, String description, BigDecimal quantity,
                             String unit, BigDecimal unitPrice) {
-        this(serviceId, description, quantity, unit, unitPrice, QuoteCalculationMethod.QUANTITY,
+        this(serviceId, description, null, quantity, unit, unitPrice, QuoteCalculationMethod.QUANTITY,
                 null, null, null);
+    }
+
+    public ServiceOrderLine(UUID serviceId, String description, BigDecimal quantity,
+                            String unit, BigDecimal unitPrice, QuoteCalculationMethod calculationMethod,
+                            BigDecimal widthMeters, BigDecimal lengthMeters, BigDecimal heightMeters) {
+        this(serviceId, description, null, quantity, unit, unitPrice, calculationMethod,
+                widthMeters, lengthMeters, heightMeters);
     }
 
     public ServiceOrderLine {
@@ -61,6 +68,7 @@ public record ServiceOrderLine(UUID serviceId, String description, BigDecimal qu
             heightMeters = null;
         }
         description = description.trim();
+        notes = notes == null || notes.isBlank() ? null : notes.trim();
         quantity = quantity.setScale(3, RoundingMode.HALF_UP).stripTrailingZeros();
         unit = unit.trim().toUpperCase();
         unitPrice = unitPrice.setScale(2, RoundingMode.HALF_UP);

@@ -94,7 +94,7 @@ public class ServiceOrderDocumentService implements ServiceOrderDocumentUseCase 
                         customer.phone()),
                 assetView,
                 order.quoteLines().stream().map(line -> new QuoteLineView(line.serviceId(), line.description(),
-                        line.quantity(), line.unit(), line.unitPrice(), line.calculationMethod(),
+                        line.notes(), line.quantity(), line.unit(), line.unitPrice(), line.calculationMethod(),
                         line.widthMeters(), line.lengthMeters(), line.heightMeters(),
                         line.billableQuantity(), line.total())).toList()
         );
@@ -169,6 +169,9 @@ public class ServiceOrderDocumentService implements ServiceOrderDocumentUseCase 
             }
             body.append(formatMoney(line.unitPrice()))
                     .append(" = ").append(formatMoney(line.total())).append('\n');
+            if (line.notes() != null && !line.notes().isBlank()) {
+                body.append("  Observações: ").append(line.notes()).append('\n');
+            }
         });
 
         if (order.estimatedValue() != null) {

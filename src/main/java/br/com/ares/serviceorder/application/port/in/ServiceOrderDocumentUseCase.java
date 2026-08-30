@@ -76,6 +76,7 @@ public interface ServiceOrderDocumentUseCase {
     record QuoteLineView(
             UUID serviceId,
             String description,
+            String notes,
             BigDecimal quantity,
             String unit,
             BigDecimal unitPrice,

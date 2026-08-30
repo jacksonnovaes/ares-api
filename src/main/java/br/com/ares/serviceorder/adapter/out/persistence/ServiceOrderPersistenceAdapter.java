@@ -29,10 +29,10 @@ class ServiceOrderPersistenceAdapter implements ServiceOrderRepository{
             Set.copyOf(e.serviceIds),e.quoteLines.stream().map(this::toLineDomain).toList(),e.title,e.description,e.status,e.priority,e.estimatedValue,e.finalValue,
             e.assignedTechnicianId,e.openedAt,e.dueAt,e.completedAt,e.createdAt,e.updatedAt);}
     private ServiceOrderLineJpaEmbeddable toLineEntity(ServiceOrderLine v){var e=new ServiceOrderLineJpaEmbeddable();
-        e.serviceId=v.serviceId();e.description=v.description();e.quantity=v.quantity();e.unit=v.unit();
+        e.serviceId=v.serviceId();e.description=v.description();e.notes=v.notes();e.quantity=v.quantity();e.unit=v.unit();
         e.unitPrice=v.unitPrice();e.calculationMethod=v.calculationMethod();e.widthMeters=v.widthMeters();
         e.lengthMeters=v.lengthMeters();e.heightMeters=v.heightMeters();return e;}
     private ServiceOrderLine toLineDomain(ServiceOrderLineJpaEmbeddable e){return new ServiceOrderLine(e.serviceId,
-            e.description,e.quantity,e.unit,e.unitPrice,e.calculationMethod,e.widthMeters,e.lengthMeters,
+            e.description,e.notes,e.quantity,e.unit,e.unitPrice,e.calculationMethod,e.widthMeters,e.lengthMeters,
             e.heightMeters);}
 }

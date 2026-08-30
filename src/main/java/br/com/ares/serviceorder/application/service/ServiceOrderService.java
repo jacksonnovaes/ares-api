@@ -104,7 +104,7 @@ public class ServiceOrderService implements ServiceOrderUseCase {
                 "quote_lines_required","Adicione pelo menos uma linha ao orçamento.");
         if(commands.size()>100)throw BusinessException.badRequest(
                 "quote_lines_limit","O orçamento pode conter no máximo 100 linhas.");
-        return commands.stream().map(line->new ServiceOrderLine(line.serviceId(),line.description(),
+        return commands.stream().map(line->new ServiceOrderLine(line.serviceId(),line.description(),line.notes(),
                 line.quantity(),line.unit(),line.unitPrice(),line.calculationMethod(),
                 line.widthMeters(),line.lengthMeters(),line.heightMeters())).toList();}
     private void validateAsset(UUID tenantId,UUID customerId,UUID assetId,boolean required){
