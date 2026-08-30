@@ -13,6 +13,7 @@ public interface CustomerRegistrationUseCase {
             String document,
             String email,
             String phone,
+            String address,
             String notes,
             boolean createUserAccess,
             String password,

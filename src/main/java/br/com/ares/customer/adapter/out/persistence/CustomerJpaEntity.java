@@ -22,6 +22,8 @@ class CustomerJpaEntity {
     String document;
     String email;
     String phone;
+    @Column(length = 500)
+    String address;
     @Column(columnDefinition = "text")
     String notes;
     @Enumerated(EnumType.STRING)

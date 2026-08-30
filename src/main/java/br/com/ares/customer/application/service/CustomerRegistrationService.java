@@ -42,7 +42,7 @@ public class CustomerRegistrationService implements CustomerRegistrationUseCase 
         }
 
         Customer customer = customers.create(new CustomerUseCase.CreateCustomerCommand(
-                command.type(), command.name(), command.document(), command.email(), command.phone(),
+                command.type(), command.name(), command.document(), command.email(), command.phone(), command.address(),
                 command.notes()));
 
         if (command.createUserAccess()) {

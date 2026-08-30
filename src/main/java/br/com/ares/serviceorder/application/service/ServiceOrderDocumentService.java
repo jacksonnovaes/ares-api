@@ -91,7 +91,7 @@ public class ServiceOrderDocumentService implements ServiceOrderDocumentUseCase 
                 new CompanyView(company.id(), company.legalName(), company.tradeName(), company.document(),
                         company.logoUrl(), company.primaryColor()),
                 new CustomerView(customer.id(), customer.name(), customer.document(), customer.email(),
-                        customer.phone()),
+                        customer.phone(), customer.address()),
                 assetView,
                 order.quoteLines().stream().map(line -> new QuoteLineView(line.serviceId(), line.description(),
                         line.notes(), line.quantity(), line.unit(), line.unitPrice(), line.calculationMethod(),

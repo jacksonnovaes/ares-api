@@ -43,7 +43,8 @@ class CustomerRegistrationServiceTest {
         service = new CustomerRegistrationService(customers, users, currentActor);
         Instant now = Instant.parse("2026-08-30T12:00:00Z");
         customer = new Customer(UUID.randomUUID(), UUID.randomUUID(), CustomerType.PERSON,
-                "Maria Silva", "12345678901", "maria@example.com", "11999999999", null,
+                "Maria Silva", "12345678901", "maria@example.com", "11999999999",
+                "Rua das Flores, 100 - Centro", null,
                 CustomerStatus.ACTIVE, now, now);
     }
 
@@ -88,7 +89,8 @@ class CustomerRegistrationServiceTest {
 
     private CustomerRegistrationUseCase.CreateCustomerRegistrationCommand command(boolean createUserAccess) {
         return new CustomerRegistrationUseCase.CreateCustomerRegistrationCommand(CustomerType.PERSON,
-                "Maria Silva", "12345678901", "maria@example.com", "11999999999", null,
+                "Maria Silva", "12345678901", "maria@example.com", "11999999999",
+                "Rua das Flores, 100 - Centro", null,
                 createUserAccess, "SenhaForte#123", "SenhaForte#123");
     }
 }

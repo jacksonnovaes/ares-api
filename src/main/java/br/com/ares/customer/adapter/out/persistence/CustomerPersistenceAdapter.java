@@ -50,6 +50,7 @@ class CustomerPersistenceAdapter implements CustomerRepository {
         entity.document = value.document();
         entity.email = value.email();
         entity.phone = value.phone();
+        entity.address = value.address();
         entity.notes = value.notes();
         entity.status = value.status();
         entity.createdAt = value.createdAt();
@@ -59,6 +60,6 @@ class CustomerPersistenceAdapter implements CustomerRepository {
 
     private Customer toDomain(CustomerJpaEntity value) {
         return new Customer(value.id, value.tenantId, value.type, value.name, value.document, value.email,
-                value.phone, value.notes, value.status, value.createdAt, value.updatedAt);
+                value.phone, value.address, value.notes, value.status, value.createdAt, value.updatedAt);
     }
 }

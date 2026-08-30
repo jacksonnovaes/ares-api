@@ -13,9 +13,9 @@ public interface CustomerUseCase {
     Customer update(UUID id, UpdateCustomerCommand command);
 
     record CreateCustomerCommand(CustomerType type, String name, String document, String email,
-                                 String phone, String notes) {
+                                 String phone, String address, String notes) {
     }
 
-    record UpdateCustomerCommand(String name, String email, String phone, String notes) {
+    record UpdateCustomerCommand(String name, String email, String phone, String address, String notes) {
     }
 }

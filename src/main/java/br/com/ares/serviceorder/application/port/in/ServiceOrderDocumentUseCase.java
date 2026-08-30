@@ -58,7 +58,8 @@ public interface ServiceOrderDocumentUseCase {
             String name,
             String document,
             String email,
-            String phone
+            String phone,
+            String address
     ) {
     }
 

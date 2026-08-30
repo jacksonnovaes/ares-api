@@ -32,7 +32,8 @@ public class CustomerController {
     Customer create(@Valid @RequestBody CreateCustomerRequest request) {
         return registration.create(new CustomerRegistrationUseCase.CreateCustomerRegistrationCommand(
                 request.type(), request.name(), request.document(), request.email(), request.phone(),
-                request.notes(), request.createUserAccess(), request.password(), request.passwordConfirmation()));
+                request.address(), request.notes(), request.createUserAccess(), request.password(),
+                request.passwordConfirmation()));
     }
 
     @GetMapping @PreAuthorize("hasAuthority('CUSTOMER_READ')")
@@ -44,15 +45,17 @@ public class CustomerController {
     @PutMapping("/{id}") @PreAuthorize("hasAuthority('CUSTOMER_UPDATE')")
     Customer update(@PathVariable UUID id, @Valid @RequestBody UpdateCustomerRequest request) {
         return customers.update(id, new CustomerUseCase.UpdateCustomerCommand(
-                request.name(), request.email(), request.phone(), request.notes()));
+                request.name(), request.email(), request.phone(), request.address(), request.notes()));
     }
 
     record CreateCustomerRequest(@NotNull CustomerType type, @NotBlank @Size(max = 160) String name,
                                  @Size(max = 20) String document, @Email @Size(max = 254) String email,
-                                 @Size(max = 30) String phone, @Size(max = 2000) String notes,
+                                 @Size(max = 30) String phone, @NotBlank @Size(max = 500) String address,
+                                 @Size(max = 2000) String notes,
                                  boolean createUserAccess, @Size(max = 72) String password,
                                  @Size(max = 72) String passwordConfirmation) {}
     record UpdateCustomerRequest(@NotBlank @Size(max = 160) String name,
                                  @Email @Size(max = 254) String email,
-                                 @Size(max = 30) String phone, @Size(max = 2000) String notes) {}
+                                 @Size(max = 30) String phone, @NotBlank @Size(max = 500) String address,
+                                 @Size(max = 2000) String notes) {}
 }

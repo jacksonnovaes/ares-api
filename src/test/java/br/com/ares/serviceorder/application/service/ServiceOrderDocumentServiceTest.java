@@ -119,7 +119,8 @@ class ServiceOrderDocumentServiceTest {
     @Test
     void requiresRecipientWhenCustomerHasNoEmail() {
         var customerWithoutEmail = new Customer(fixture.customer.id(), fixture.tenant.id(), CustomerType.PERSON,
-                "Cliente", "12345678901", null, null, null, CustomerStatus.ACTIVE, NOW, NOW);
+                "Cliente", "12345678901", null, null, "Rua sem número", null,
+                CustomerStatus.ACTIVE, NOW, NOW);
         when(customers.get(fixture.customer.id())).thenReturn(customerWithoutEmail);
 
         assertThatThrownBy(() -> service.sendEmail(fixture.order.id(),
@@ -142,7 +143,8 @@ class ServiceOrderDocumentServiceTest {
                 java.util.EnumSet.allOf(br.com.ares.tenant.domain.model.QuoteCalculationMethod.class),
                 null, null, NOW, NOW);
         var customer = new Customer(customerId, tenantId, CustomerType.PERSON, "Maria da Silva",
-                "12345678901", "cliente@example.com", "11999999999", null, CustomerStatus.ACTIVE, NOW, NOW);
+                "12345678901", "cliente@example.com", "11999999999",
+                "Rua das Flores, 100 - Centro", null, CustomerStatus.ACTIVE, NOW, NOW);
         var assetType = new AssetType(UUID.randomUUID(), tenantId, "VEHICLE", "Veículo", true, true, NOW, NOW);
         var asset = new Asset(assetId, tenantId, customerId, "VEHICLE", "Veículo principal",
                 "Toyota", "Corolla", "ABC123", Map.of(), NOW, NOW);
