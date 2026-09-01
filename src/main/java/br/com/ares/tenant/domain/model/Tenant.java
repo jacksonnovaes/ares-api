@@ -2,6 +2,7 @@ package br.com.ares.tenant.domain.model;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -27,6 +28,23 @@ public record Tenant(
         Set<QuoteCalculationMethod> enabledQuoteCalculationMethods,
         BigDecimal defaultSquareMeterPrice,
         BigDecimal defaultCubicMeterPrice,
+        boolean publicPageEnabled,
+        String publicHeadline,
+        String publicDescription,
+        String publicWhatsapp,
+        String publicEmail,
+        String publicCity,
+        String publicServiceArea,
+        boolean publicShowPrices,
+        PublicServiceSource publicServiceSource,
+        List<PublicProfileManualService> publicManualServices,
+        String publicAccentColor,
+        String publicBackgroundColor,
+        String publicTextColor,
+        String publicLogoPath,
+        String publicBackgroundImagePath,
+        boolean publicShowLogo,
+        int publicBackgroundOverlayPercentage,
         Instant createdAt,
         Instant updatedAt
 ) {
@@ -39,7 +57,11 @@ public record Tenant(
                 subscriptionPlan, subscriptionBillingCycle, additionalUserSeats, subscriptionActive,
                 subscriptionPaidUntil, subscriptionPrice,
                 couponCode, couponDiscountPercentage, quoteCalculationMethod, enabledQuoteCalculationMethods,
-                defaultSquareMeterPrice, defaultCubicMeterPrice, createdAt, at);
+                defaultSquareMeterPrice, defaultCubicMeterPrice, publicPageEnabled, publicHeadline,
+                publicDescription, publicWhatsapp, publicEmail, publicCity, publicServiceArea, publicShowPrices,
+                publicServiceSource, publicManualServices, publicAccentColor, publicBackgroundColor, publicTextColor,
+                publicLogoPath, publicBackgroundImagePath, publicShowLogo, publicBackgroundOverlayPercentage,
+                createdAt, at);
     }
 
     public Tenant withCompanySettings(boolean assetsRequired, QuoteCalculationMethod calculationMethod,
@@ -49,7 +71,37 @@ public record Tenant(
                 subscriptionPlan, subscriptionBillingCycle, additionalUserSeats, subscriptionActive,
                 subscriptionPaidUntil, subscriptionPrice,
                 couponCode, couponDiscountPercentage, calculationMethod,
-                Set.copyOf(enabledCalculationMethods), squareMeterPrice, cubicMeterPrice, createdAt, at);
+                Set.copyOf(enabledCalculationMethods), squareMeterPrice, cubicMeterPrice, publicPageEnabled,
+                publicHeadline, publicDescription, publicWhatsapp, publicEmail, publicCity, publicServiceArea,
+                publicShowPrices, publicServiceSource, publicManualServices, publicAccentColor,
+                publicBackgroundColor, publicTextColor, publicLogoPath, publicBackgroundImagePath, publicShowLogo,
+                publicBackgroundOverlayPercentage, createdAt, at);
+    }
+
+    public Tenant withPublicProfile(boolean enabled, String headline, String description, String whatsapp,
+                                    String email, String city, String serviceArea, boolean showPrices,
+                                    PublicServiceSource serviceSource,
+                                    List<PublicProfileManualService> manualServices,
+                                    String accentColor, String backgroundColor, String textColor,
+                                    boolean showLogo, int backgroundOverlayPercentage, Instant at) {
+        return new Tenant(id, legalName, tradeName, slug, document, status, logoUrl, primaryColor, requireAssets,
+                subscriptionPlan, subscriptionBillingCycle, additionalUserSeats, subscriptionActive,
+                subscriptionPaidUntil, subscriptionPrice, couponCode, couponDiscountPercentage,
+                quoteCalculationMethod, enabledQuoteCalculationMethods, defaultSquareMeterPrice,
+                defaultCubicMeterPrice, enabled, headline, description, whatsapp, email, city, serviceArea,
+                showPrices, serviceSource, List.copyOf(manualServices), accentColor, backgroundColor, textColor,
+                publicLogoPath, publicBackgroundImagePath, showLogo, backgroundOverlayPercentage, createdAt, at);
+    }
+
+    public Tenant withPublicMedia(String logoPath, String backgroundImagePath, Instant at) {
+        return new Tenant(id, legalName, tradeName, slug, document, status, logoUrl, primaryColor, requireAssets,
+                subscriptionPlan, subscriptionBillingCycle, additionalUserSeats, subscriptionActive,
+                subscriptionPaidUntil, subscriptionPrice, couponCode, couponDiscountPercentage,
+                quoteCalculationMethod, enabledQuoteCalculationMethods, defaultSquareMeterPrice,
+                defaultCubicMeterPrice, publicPageEnabled, publicHeadline, publicDescription, publicWhatsapp,
+                publicEmail, publicCity, publicServiceArea, publicShowPrices, publicServiceSource,
+                publicManualServices, publicAccentColor, publicBackgroundColor, publicTextColor, logoPath,
+                backgroundImagePath, publicShowLogo, publicBackgroundOverlayPercentage, createdAt, at);
     }
 
     public int subscriptionUserLimit() {

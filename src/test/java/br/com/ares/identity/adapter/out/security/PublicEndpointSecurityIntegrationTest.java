@@ -10,6 +10,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -70,5 +71,25 @@ class PublicEndpointSecurityIntegrationTest {
                 .andExpect(jsonPath("$.couponCode").value("BEMVINDO20"))
                 .andExpect(jsonPath("$.discountPercentage").value(20))
                 .andExpect(jsonPath("$.price").value(55.92));
+    }
+
+    @Test
+    void professionalProfileIsPublicAndIgnoresAnInvalidBearerToken() throws Exception {
+        mockMvc.perform(get("/api/v1/public/profiles/perfil-inexistente")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer invalid-token-from-an-old-cookie"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("public_profile_not_found"));
+    }
+
+    @Test
+    void professionalMediaIsPublicButUploadManagementRemainsProtected() throws Exception {
+        mockMvc.perform(get("/api/v1/public/media/00000000-0000-0000-0000-000000000000/"
+                        + "logo-00000000-0000-0000-0000-000000000000.png")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer invalid-token-from-an-old-cookie"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("public_profile_media_not_found"));
+
+        mockMvc.perform(delete("/api/v1/public-profile-media/LOGO"))
+                .andExpect(status().isUnauthorized());
     }
 }

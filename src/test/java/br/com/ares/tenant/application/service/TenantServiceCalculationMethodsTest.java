@@ -60,7 +60,9 @@ class TenantServiceCalculationMethodsTest {
                 SubscriptionBillingCycle.MONTHLY, 0, true, NOW.plusSeconds(2_592_000),
                 new BigDecimal("29.90"), null, BigDecimal.ZERO.setScale(2),
                 QuoteCalculationMethod.QUANTITY, EnumSet.allOf(QuoteCalculationMethod.class),
-                new BigDecimal("80.00"), new BigDecimal("250.00"), NOW, NOW);
+                new BigDecimal("80.00"), new BigDecimal("250.00"), false, null, null, null, null, null, null,
+                false, br.com.ares.tenant.domain.model.PublicServiceSource.CATALOG, java.util.List.of(),
+                "#2457E6", "#F6F4ED", "#142019", null, null, true, 18, NOW, NOW);
         when(repository.findById(tenantId)).thenReturn(Optional.of(tenant));
         lenient().when(repository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
     }

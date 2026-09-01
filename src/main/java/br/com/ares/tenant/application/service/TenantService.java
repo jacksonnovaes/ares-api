@@ -64,7 +64,10 @@ public class TenantService implements TenantManagementUseCase, CompanySettingsUs
                 command.additionalUserSeats(), command.subscriptionActive(), command.subscriptionPaidUntil(),
                 command.subscriptionPrice(), command.couponCode(),
                 command.couponDiscountPercentage(), QuoteCalculationMethod.QUANTITY,
-                EnumSet.allOf(QuoteCalculationMethod.class), null, null, now, now);
+                EnumSet.allOf(QuoteCalculationMethod.class), null, null, false, null, null, null, null,
+                null, null, false, br.com.ares.tenant.domain.model.PublicServiceSource.CATALOG, java.util.List.of(),
+                command.primaryColor() == null ? "#2457E6" : command.primaryColor(), "#F6F4ED", "#142019",
+                null, null, true, 18, now, now);
         tenant = repository.save(tenant);
         assetTypes.provisionDefaults(tenant.id());
         orderStatuses.provisionDefaults(tenant.id());
@@ -95,8 +98,14 @@ public class TenantService implements TenantManagementUseCase, CompanySettingsUs
                 current.subscriptionPrice(), current.couponCode(),
                 current.couponDiscountPercentage(), current.quoteCalculationMethod(),
                 current.enabledQuoteCalculationMethods(),
-                current.defaultSquareMeterPrice(), current.defaultCubicMeterPrice(), current.createdAt(),
-                clock.instant()));
+                current.defaultSquareMeterPrice(), current.defaultCubicMeterPrice(), current.publicPageEnabled(),
+                current.publicHeadline(), current.publicDescription(), current.publicWhatsapp(),
+                current.publicEmail(), current.publicCity(), current.publicServiceArea(), current.publicShowPrices(),
+                current.publicServiceSource(), current.publicManualServices(), current.publicAccentColor(),
+                current.publicBackgroundColor(), current.publicTextColor(), current.publicLogoPath(),
+                current.publicBackgroundImagePath(), current.publicShowLogo(),
+                current.publicBackgroundOverlayPercentage(),
+                current.createdAt(), clock.instant()));
     }
 
     @Override

@@ -46,6 +46,7 @@ rsync -az \
   --exclude=node_modules \
   --exclude=.next \
   --exclude=target \
+  --exclude=data \
   --exclude=.env \
   --exclude=.env.production \
   ares-api aresweb USUARIO@IP_DA_VPS:/opt/ares/
@@ -134,7 +135,7 @@ Para acompanhar uma falha em tempo real:
 docker compose --env-file .env.production -f compose.production.yml logs -f --tail=200 api
 ```
 
-## 5. Backup do banco
+## 5. Backup do banco e das imagens
 
 Crie uma pasta protegida e faça um dump lógico periódico:
 
@@ -143,14 +144,16 @@ cd /opt/ares/ares-api
 mkdir -p backups
 chmod 700 backups
 docker compose --env-file .env.production -f compose.production.yml exec -T postgres sh -c 'pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB"' > "backups/ares-$(date +%F-%H%M%S).sql"
+docker run --rm -v ares_public_profile_media:/source:ro -v "$PWD/backups":/backup alpine \
+  tar -czf "/backup/ares-imagens-$(date +%F-%H%M%S).tar.gz" -C /source .
 ```
 
 Copie esses backups para outro servidor ou armazenamento. Um backup mantido
 somente na mesma VPS não protege contra perda do disco ou da própria VPS.
 
-Nunca execute `docker compose down -v` em produção: a opção `-v` remove o volume
-do PostgreSQL. Um `docker compose down` sem `-v` mantém os dados, mas interrompe
-o sistema.
+Nunca execute `docker compose down -v` em produção: a opção `-v` remove os volumes
+do PostgreSQL e das imagens da página profissional. Um `docker compose down` sem
+`-v` mantém os dados, mas interrompe o sistema.
 
 ## 6. Observações sobre credenciais e migração
 

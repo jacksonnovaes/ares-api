@@ -4,6 +4,10 @@ spring:
     name: ares-api
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:test}
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
 
 server:
   port: ${SERVER_PORT:8080}
@@ -41,6 +45,8 @@ ares:
       max-failures: ${LOGIN_MAX_FAILURES:5}
       window: ${LOGIN_FAILURE_WINDOW:PT15M}
       block-duration: ${LOGIN_BLOCK_DURATION:PT15M}
+  storage:
+    public-profile-media-root: ${PUBLIC_PROFILE_MEDIA_ROOT:./data/public-profile-media}
 
 logging:
   level:

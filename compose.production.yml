@@ -53,8 +53,11 @@ services:
       PROMOTION_VALID_UNTIL: ${PROMOTION_VALID_UNTIL:-}
       SPRINGDOC_API_DOCS_ENABLED: ${SPRINGDOC_API_DOCS_ENABLED:-true}
       SPRINGDOC_SWAGGER_UI_ENABLED: ${SPRINGDOC_SWAGGER_UI_ENABLED:-true}
+      PUBLIC_PROFILE_MEDIA_ROOT: /data/public-profile-media
     expose:
       - "8080"
+    volumes:
+      - public_profile_media:/data/public-profile-media
     depends_on:
       postgres:
         condition: service_healthy
@@ -134,6 +137,7 @@ services:
 
 volumes:
   postgres_data:
+  public_profile_media:
   caddy_data:
   caddy_config:
 

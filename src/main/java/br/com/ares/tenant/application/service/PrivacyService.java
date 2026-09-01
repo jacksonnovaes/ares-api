@@ -11,6 +11,7 @@ import br.com.ares.shared.application.CurrentActorProvider;
 import br.com.ares.shared.domain.BusinessException;
 import br.com.ares.tenant.application.port.in.PrivacyUseCase;
 import br.com.ares.tenant.application.port.in.TenantManagementUseCase;
+import br.com.ares.tenant.application.port.in.PublicProfileMediaUseCase;
 import br.com.ares.tenant.application.port.out.TenantRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,12 +34,13 @@ public class PrivacyService implements PrivacyUseCase {
     private final CurrentActorProvider currentActor;
     private final AuditLogPort audit;
     private final Clock clock;
+    private final PublicProfileMediaUseCase publicProfileMedia;
 
     public PrivacyService(TenantManagementUseCase tenants, TenantRepository tenantRepository,
                           UserRepository users, CustomerUseCase customers, AssetUseCase assets,
                           ServiceCatalogUseCase catalog, ServiceOrderUseCase orders,
                           PasswordHasher passwordHasher, CurrentActorProvider currentActor,
-                          AuditLogPort audit, Clock clock) {
+                          AuditLogPort audit, Clock clock, PublicProfileMediaUseCase publicProfileMedia) {
         this.tenants = tenants;
         this.tenantRepository = tenantRepository;
         this.users = users;
@@ -50,6 +52,7 @@ public class PrivacyService implements PrivacyUseCase {
         this.currentActor = currentActor;
         this.audit = audit;
         this.clock = clock;
+        this.publicProfileMedia = publicProfileMedia;
     }
 
     @Override
@@ -89,6 +92,7 @@ public class PrivacyService implements PrivacyUseCase {
         audit.record(actor.tenantId(), actor.userId(), "TENANT_DELETION_CONFIRMED", "TENANT",
                 actor.tenantId().toString(), Map.of("receiptId", receiptId, "deletedAt", deletedAt));
         tenantRepository.deleteAllData(actor.tenantId());
+        publicProfileMedia.deleteTenantFiles(actor.tenantId());
         return new DataDeletionResult(receiptId, deletedAt);
     }
 

@@ -8,7 +8,8 @@ public enum SubscriptionPlan {
             "Clientes e catálogo de serviços",
             "Agenda de atendimentos",
             "Orçamentos e ordens de serviço",
-            "PDF e histórico de atendimentos"
+            "PDF e histórico de atendimentos",
+            "Página profissional pública"
     )),
     PRO("Pro", new BigDecimal("69.90"), new BigDecimal("699.00"), 3, List.of(
             "Tudo do Solo",
