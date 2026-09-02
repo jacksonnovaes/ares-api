@@ -143,7 +143,7 @@ class ServiceOrderDocumentServiceTest {
                 java.util.EnumSet.allOf(br.com.ares.tenant.domain.model.QuoteCalculationMethod.class),
                 null, null, false, null, null, null, null, null, null, false,
                 br.com.ares.tenant.domain.model.PublicServiceSource.CATALOG, java.util.List.of(),
-                "#2457E6", "#F6F4ED", "#142019", null, null, true, 18, NOW, NOW);
+                "#2457E6", "#F6F4ED", "#142019", null, null, null, true, 18, NOW, NOW);
         var customer = new Customer(customerId, tenantId, CustomerType.PERSON, "Maria da Silva",
                 "12345678901", "cliente@example.com", "11999999999",
                 "Rua das Flores, 100 - Centro", null, CustomerStatus.ACTIVE, NOW, NOW);

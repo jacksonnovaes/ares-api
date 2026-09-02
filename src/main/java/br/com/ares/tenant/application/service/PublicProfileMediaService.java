@@ -4,8 +4,10 @@ import br.com.ares.shared.application.AuditLogPort;
 import br.com.ares.shared.application.CurrentActorProvider;
 import br.com.ares.shared.domain.BusinessException;
 import br.com.ares.tenant.application.port.in.PublicProfileMediaUseCase;
+import br.com.ares.tenant.application.port.out.PublicProfileMediaRepository;
 import br.com.ares.tenant.application.port.out.TenantRepository;
 import br.com.ares.tenant.domain.model.PublicProfileMediaKind;
+import br.com.ares.tenant.domain.model.PublicProfileStoredMedia;
 import br.com.ares.tenant.domain.model.Tenant;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -15,11 +17,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.time.Clock;
+import java.time.Instant;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.UUID;
-import java.util.Comparator;
 
 @Service
 public class PublicProfileMediaService implements PublicProfileMediaUseCase {
@@ -27,16 +29,19 @@ public class PublicProfileMediaService implements PublicProfileMediaUseCase {
     static final int MAX_FILE_SIZE = 5 * 1024 * 1024;
 
     private final TenantRepository tenants;
+    private final PublicProfileMediaRepository mediaRepository;
     private final CurrentActorProvider currentActor;
     private final AuditLogPort audit;
     private final Clock clock;
     private final Path root;
 
-    public PublicProfileMediaService(TenantRepository tenants, CurrentActorProvider currentActor, AuditLogPort audit,
+    public PublicProfileMediaService(TenantRepository tenants, PublicProfileMediaRepository mediaRepository,
+                                     CurrentActorProvider currentActor, AuditLogPort audit,
                                      Clock clock,
                                      @Value("${ares.storage.public-profile-media-root:./data/public-profile-media}")
                                      String storageRoot) {
         this.tenants = tenants;
+        this.mediaRepository = mediaRepository;
         this.currentActor = currentActor;
         this.audit = audit;
         this.clock = clock;
@@ -56,28 +61,17 @@ public class PublicProfileMediaService implements PublicProfileMediaUseCase {
         Tenant tenant = required(actor.tenantId());
         String filename = kind.name().toLowerCase() + "-" + UUID.randomUUID() + "." + image.extension();
         String relativePath = tenant.id() + "/" + filename;
-        Path destination = resolve(relativePath);
-        String previousPath = kind == PublicProfileMediaKind.LOGO
-                ? tenant.publicLogoPath() : tenant.publicBackgroundImagePath();
-        try {
-            Files.createDirectories(destination.getParent());
-            Files.write(destination, content, StandardOpenOption.CREATE_NEW);
-            Tenant updated = kind == PublicProfileMediaKind.LOGO
-                    ? tenant.withPublicMedia(relativePath, tenant.publicBackgroundImagePath(), clock.instant())
-                    : tenant.withPublicMedia(tenant.publicLogoPath(), relativePath, clock.instant());
-            try {
-                tenants.save(updated);
-            } catch (RuntimeException exception) {
-                Files.deleteIfExists(destination);
-                throw exception;
-            }
-            deleteQuietly(previousPath);
-            audit.record(actor.tenantId(), actor.userId(), "PUBLIC_PROFILE_MEDIA_UPDATED", "TENANT",
-                    actor.tenantId().toString(), Map.of("kind", kind.name(), "contentType", image.contentType()));
-            return new StoredMedia(kind, relativePath);
-        } catch (IOException exception) {
-            throw storageFailure(exception);
-        }
+        String previousPath = pathOf(tenant, kind);
+        Instant now = clock.instant();
+        var existing = mediaRepository.findByTenantIdAndKind(tenant.id(), kind);
+        mediaRepository.save(new PublicProfileStoredMedia(existing.map(PublicProfileStoredMedia::id)
+                .orElseGet(UUID::randomUUID), tenant.id(), kind, filename, image.contentType(), content,
+                content.length, existing.map(PublicProfileStoredMedia::createdAt).orElse(now), now));
+        tenants.save(withPath(tenant, kind, relativePath, now));
+        deleteQuietly(previousPath);
+        audit.record(actor.tenantId(), actor.userId(), updatedEvent(kind), "TENANT",
+                actor.tenantId().toString(), Map.of("kind", kind.name(), "contentType", image.contentType()));
+        return new StoredMedia(kind, relativePath);
     }
 
     @Override
@@ -85,37 +79,54 @@ public class PublicProfileMediaService implements PublicProfileMediaUseCase {
     public void remove(PublicProfileMediaKind kind) {
         var actor = currentActor.requiredActor();
         Tenant tenant = required(actor.tenantId());
-        String previousPath = kind == PublicProfileMediaKind.LOGO
-                ? tenant.publicLogoPath() : tenant.publicBackgroundImagePath();
-        Tenant updated = kind == PublicProfileMediaKind.LOGO
-                ? tenant.withPublicMedia(null, tenant.publicBackgroundImagePath(), clock.instant())
-                : tenant.withPublicMedia(tenant.publicLogoPath(), null, clock.instant());
-        tenants.save(updated);
+        String previousPath = pathOf(tenant, kind);
+        mediaRepository.deleteByTenantIdAndKind(tenant.id(), kind);
+        tenants.save(withPath(tenant, kind, null, clock.instant()));
         deleteQuietly(previousPath);
-        audit.record(actor.tenantId(), actor.userId(), "PUBLIC_PROFILE_MEDIA_REMOVED", "TENANT",
+        audit.record(actor.tenantId(), actor.userId(), removedEvent(kind), "TENANT",
                 actor.tenantId().toString(), Map.of("kind", kind.name()));
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public MediaContent load(String tenantDirectory, String filename) {
         if (!tenantDirectory.matches("[0-9a-fA-F-]{36}")
-                || !filename.matches("(?:logo|background)-[0-9a-fA-F-]{36}\\.(?:png|jpg|webp)")) {
+                || !filename.matches("(?:brand|profile|logo|background)-[0-9a-fA-F-]{36}\\.(?:png|jpg|webp)")) {
             throw BusinessException.notFound("public_profile_media_not_found", "Imagem não encontrada.");
         }
+        UUID tenantId;
+        try {
+            tenantId = UUID.fromString(tenantDirectory);
+        } catch (IllegalArgumentException exception) {
+            throw BusinessException.notFound("public_profile_media_not_found", "Imagem não encontrada.");
+        }
+        PublicProfileMediaKind kind = kindOf(filename);
+        var stored = mediaRepository.findByTenantIdAndKind(tenantId, kind);
+        if (stored.isPresent() && stored.get().filename().equals(filename)) {
+            return new MediaContent(stored.get().content(), stored.get().contentType());
+        }
+
+        // Compatibilidade com imagens salvas em volume antes da migração V21.
         Path path = resolve(tenantDirectory + "/" + filename);
         if (!Files.isRegularFile(path)) {
             throw BusinessException.notFound("public_profile_media_not_found", "Imagem não encontrada.");
         }
         try {
-            return new MediaContent(Files.readAllBytes(path), contentType(filename));
+            byte[] bytes = Files.readAllBytes(path);
+            DetectedImage image = detect(bytes);
+            Instant now = clock.instant();
+            mediaRepository.save(new PublicProfileStoredMedia(UUID.randomUUID(), tenantId, kind, filename,
+                    image.contentType(), bytes, bytes.length, now, now));
+            return new MediaContent(bytes, image.contentType());
         } catch (IOException exception) {
             throw storageFailure(exception);
         }
     }
 
     @Override
+    @Transactional
     public void deleteTenantFiles(UUID tenantId) {
+        mediaRepository.deleteAllByTenantId(tenantId);
         Path directory = resolve(tenantId.toString());
         if (!Files.exists(directory)) return;
         try (var paths = Files.walk(directory)) {
@@ -136,6 +147,42 @@ public class PublicProfileMediaService implements PublicProfileMediaUseCase {
                 BusinessException.notFound("tenant_not_found", "Empresa não encontrada."));
     }
 
+    private String pathOf(Tenant tenant, PublicProfileMediaKind kind) {
+        return switch (kind) {
+            case BRAND -> tenant.logoUrl();
+            case PROFILE -> tenant.publicProfileImagePath();
+            case LOGO -> tenant.publicLogoPath();
+            case BACKGROUND -> tenant.publicBackgroundImagePath();
+        };
+    }
+
+    private Tenant withPath(Tenant tenant, PublicProfileMediaKind kind, String path, Instant at) {
+        return switch (kind) {
+            case BRAND -> tenant.withBrandLogo(path, at);
+            case PROFILE -> tenant.withPublicMedia(path, tenant.publicLogoPath(),
+                    tenant.publicBackgroundImagePath(), at);
+            case LOGO -> tenant.withPublicMedia(tenant.publicProfileImagePath(), path,
+                    tenant.publicBackgroundImagePath(), at);
+            case BACKGROUND -> tenant.withPublicMedia(tenant.publicProfileImagePath(), tenant.publicLogoPath(),
+                    path, at);
+        };
+    }
+
+    private PublicProfileMediaKind kindOf(String filename) {
+        if (filename.startsWith("brand-")) return PublicProfileMediaKind.BRAND;
+        if (filename.startsWith("profile-")) return PublicProfileMediaKind.PROFILE;
+        if (filename.startsWith("logo-")) return PublicProfileMediaKind.LOGO;
+        return PublicProfileMediaKind.BACKGROUND;
+    }
+
+    private String updatedEvent(PublicProfileMediaKind kind) {
+        return kind == PublicProfileMediaKind.BRAND ? "BRAND_LOGO_UPDATED" : "PUBLIC_PROFILE_MEDIA_UPDATED";
+    }
+
+    private String removedEvent(PublicProfileMediaKind kind) {
+        return kind == PublicProfileMediaKind.BRAND ? "BRAND_LOGO_REMOVED" : "PUBLIC_PROFILE_MEDIA_REMOVED";
+    }
+
     private Path resolve(String relativePath) {
         Path resolved = root.resolve(relativePath).normalize();
         if (!resolved.startsWith(root)) {
@@ -146,6 +193,8 @@ public class PublicProfileMediaService implements PublicProfileMediaUseCase {
 
     private void deleteQuietly(String relativePath) {
         if (relativePath == null || relativePath.isBlank()) return;
+        if (!relativePath.matches("[0-9a-fA-F-]{36}/(?:brand|profile|logo|background)-"
+                + "[0-9a-fA-F-]{36}\\.(?:png|jpg|webp)")) return;
         try {
             Files.deleteIfExists(resolve(relativePath));
         } catch (IOException ignored) {
@@ -171,15 +220,9 @@ public class PublicProfileMediaService implements PublicProfileMediaUseCase {
                 "Envie uma imagem PNG, JPG ou WebP.");
     }
 
-    private String contentType(String filename) {
-        if (filename.endsWith(".png")) return "image/png";
-        if (filename.endsWith(".webp")) return "image/webp";
-        return "image/jpeg";
-    }
-
     private BusinessException storageFailure(Exception exception) {
         return new BusinessException(HttpStatus.INTERNAL_SERVER_ERROR, "public_profile_media_storage_failed",
-                "Não foi possível salvar ou carregar a imagem no servidor.");
+                "Não foi possível salvar ou carregar a imagem.");
     }
 
     private record DetectedImage(String extension, String contentType) {

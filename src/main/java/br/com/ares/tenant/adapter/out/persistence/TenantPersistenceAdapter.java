@@ -111,6 +111,7 @@ class TenantPersistenceAdapter implements TenantRepository {
         entity.publicAccentColor = tenant.publicAccentColor();
         entity.publicBackgroundColor = tenant.publicBackgroundColor();
         entity.publicTextColor = tenant.publicTextColor();
+        entity.publicProfileImagePath = tenant.publicProfileImagePath();
         entity.publicLogoPath = tenant.publicLogoPath();
         entity.publicBackgroundImagePath = tenant.publicBackgroundImagePath();
         entity.publicShowLogo = tenant.publicShowLogo();
@@ -136,7 +137,8 @@ class TenantPersistenceAdapter implements TenantRepository {
                         new br.com.ares.tenant.domain.model.PublicProfileManualService(
                                 value.name, value.description, value.basePrice)).toList(),
                 entity.publicAccentColor, entity.publicBackgroundColor, entity.publicTextColor,
-                entity.publicLogoPath, entity.publicBackgroundImagePath, entity.publicShowLogo,
+                entity.publicProfileImagePath, entity.publicLogoPath, entity.publicBackgroundImagePath,
+                entity.publicShowLogo,
                 entity.publicBackgroundOverlayPercentage,
                 entity.createdAt, entity.updatedAt);
     }

@@ -16,8 +16,8 @@ public interface PublicProfileUseCase {
                            String headline, String description, String whatsapp, String email, String city,
                            String serviceArea, boolean showPrices, PublicServiceSource serviceSource,
                            List<ManualService> manualServices, String accentColor, String backgroundColor,
-                           String textColor, String logoPath, String backgroundImagePath, boolean showLogo,
-                           int backgroundOverlayPercentage) {
+                           String textColor, String profileImagePath, String logoPath, String backgroundImagePath,
+                           boolean showLogo, int backgroundOverlayPercentage) {
     }
 
     record UpdateProfileCommand(boolean enabled, String headline, String description, String whatsapp, String email,
@@ -30,8 +30,9 @@ public interface PublicProfileUseCase {
     record PublicProfile(String slug, String tradeName, String logoUrl, String primaryColor, String headline,
                          String description, String whatsapp, String email, String city, String serviceArea,
                          boolean showPrices, PublicServiceSource serviceSource, String accentColor,
-                         String backgroundColor, String textColor, String logoPath, String backgroundImagePath,
-                         boolean showLogo, int backgroundOverlayPercentage, List<PublicService> services) {
+                         String backgroundColor, String textColor, String profileImagePath, String logoPath,
+                         String backgroundImagePath, boolean showLogo, int backgroundOverlayPercentage,
+                         List<PublicService> services) {
     }
 
     record ManualService(String name, String description, BigDecimal basePrice) {

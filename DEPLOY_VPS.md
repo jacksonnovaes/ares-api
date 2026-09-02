@@ -135,15 +135,24 @@ Para acompanhar uma falha em tempo real:
 docker compose --env-file .env.production -f compose.production.yml logs -f --tail=200 api
 ```
 
-## 5. Backup do banco e das imagens
+## 5. Backup do banco, incluindo as imagens
 
-Crie uma pasta protegida e faça um dump lógico periódico:
+Foto de perfil, logo e fundo da página profissional, além do logo da configuração
+de Aparência, ficam no PostgreSQL. Portanto, o dump lógico já inclui as imagens.
+Crie uma pasta protegida e faça-o periodicamente:
 
 ```bash
 cd /opt/ares/ares-api
 mkdir -p backups
 chmod 700 backups
 docker compose --env-file .env.production -f compose.production.yml exec -T postgres sh -c 'pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB"' > "backups/ares-$(date +%F-%H%M%S).sql"
+```
+
+O volume antigo de imagens é mantido apenas para que arquivos criados antes da
+migração V21 continuem acessíveis. Enquanto ainda houver imagens antigas, inclua-o
+também no backup:
+
+```bash
 docker run --rm -v ares_public_profile_media:/source:ro -v "$PWD/backups":/backup alpine \
   tar -czf "/backup/ares-imagens-$(date +%F-%H%M%S).tar.gz" -C /source .
 ```
@@ -151,8 +160,8 @@ docker run --rm -v ares_public_profile_media:/source:ro -v "$PWD/backups":/backu
 Copie esses backups para outro servidor ou armazenamento. Um backup mantido
 somente na mesma VPS não protege contra perda do disco ou da própria VPS.
 
-Nunca execute `docker compose down -v` em produção: a opção `-v` remove os volumes
-do PostgreSQL e das imagens da página profissional. Um `docker compose down` sem
+Nunca execute `docker compose down -v` em produção: a opção `-v` remove o volume
+do PostgreSQL, que agora contém também as imagens. Um `docker compose down` sem
 `-v` mantém os dados, mas interrompe o sistema.
 
 ## 6. Observações sobre credenciais e migração

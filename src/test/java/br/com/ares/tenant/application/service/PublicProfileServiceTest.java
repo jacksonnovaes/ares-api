@@ -112,7 +112,7 @@ class PublicProfileServiceTest {
                 EnumSet.allOf(QuoteCalculationMethod.class), null, null, published,
                 "Serviços elétricos com segurança", "Atendimento residencial e comercial.", "11999999999",
                 "contato@example.com", "Campinas - SP", "Campinas e região", showPrices,
-                PublicServiceSource.CATALOG, List.of(), "#2457E6", "#F6F4ED", "#142019", null, null,
+                PublicServiceSource.CATALOG, List.of(), "#2457E6", "#F6F4ED", "#142019", null, null, null,
                 true, 18, NOW, NOW);
     }
 }

@@ -41,6 +41,7 @@ public record Tenant(
         String publicAccentColor,
         String publicBackgroundColor,
         String publicTextColor,
+        String publicProfileImagePath,
         String publicLogoPath,
         String publicBackgroundImagePath,
         boolean publicShowLogo,
@@ -52,6 +53,18 @@ public record Tenant(
         return status == TenantStatus.ACTIVE && subscriptionActive;
     }
 
+    public Tenant withBrandLogo(String value, Instant at) {
+        return new Tenant(id, legalName, tradeName, slug, document, status, value, primaryColor, requireAssets,
+                subscriptionPlan, subscriptionBillingCycle, additionalUserSeats, subscriptionActive,
+                subscriptionPaidUntil, subscriptionPrice, couponCode, couponDiscountPercentage,
+                quoteCalculationMethod, enabledQuoteCalculationMethods, defaultSquareMeterPrice,
+                defaultCubicMeterPrice, publicPageEnabled, publicHeadline, publicDescription, publicWhatsapp,
+                publicEmail, publicCity, publicServiceArea, publicShowPrices, publicServiceSource,
+                publicManualServices, publicAccentColor, publicBackgroundColor, publicTextColor,
+                publicProfileImagePath, publicLogoPath, publicBackgroundImagePath, publicShowLogo,
+                publicBackgroundOverlayPercentage, createdAt, at);
+    }
+
     public Tenant withRequireAssets(boolean value, Instant at) {
         return new Tenant(id, legalName, tradeName, slug, document, status, logoUrl, primaryColor, value,
                 subscriptionPlan, subscriptionBillingCycle, additionalUserSeats, subscriptionActive,
@@ -60,7 +73,8 @@ public record Tenant(
                 defaultSquareMeterPrice, defaultCubicMeterPrice, publicPageEnabled, publicHeadline,
                 publicDescription, publicWhatsapp, publicEmail, publicCity, publicServiceArea, publicShowPrices,
                 publicServiceSource, publicManualServices, publicAccentColor, publicBackgroundColor, publicTextColor,
-                publicLogoPath, publicBackgroundImagePath, publicShowLogo, publicBackgroundOverlayPercentage,
+                publicProfileImagePath, publicLogoPath, publicBackgroundImagePath, publicShowLogo,
+                publicBackgroundOverlayPercentage,
                 createdAt, at);
     }
 
@@ -74,8 +88,8 @@ public record Tenant(
                 Set.copyOf(enabledCalculationMethods), squareMeterPrice, cubicMeterPrice, publicPageEnabled,
                 publicHeadline, publicDescription, publicWhatsapp, publicEmail, publicCity, publicServiceArea,
                 publicShowPrices, publicServiceSource, publicManualServices, publicAccentColor,
-                publicBackgroundColor, publicTextColor, publicLogoPath, publicBackgroundImagePath, publicShowLogo,
-                publicBackgroundOverlayPercentage, createdAt, at);
+                publicBackgroundColor, publicTextColor, publicProfileImagePath, publicLogoPath,
+                publicBackgroundImagePath, publicShowLogo, publicBackgroundOverlayPercentage, createdAt, at);
     }
 
     public Tenant withPublicProfile(boolean enabled, String headline, String description, String whatsapp,
@@ -90,18 +104,19 @@ public record Tenant(
                 quoteCalculationMethod, enabledQuoteCalculationMethods, defaultSquareMeterPrice,
                 defaultCubicMeterPrice, enabled, headline, description, whatsapp, email, city, serviceArea,
                 showPrices, serviceSource, List.copyOf(manualServices), accentColor, backgroundColor, textColor,
-                publicLogoPath, publicBackgroundImagePath, showLogo, backgroundOverlayPercentage, createdAt, at);
+                publicProfileImagePath, publicLogoPath, publicBackgroundImagePath, showLogo,
+                backgroundOverlayPercentage, createdAt, at);
     }
 
-    public Tenant withPublicMedia(String logoPath, String backgroundImagePath, Instant at) {
+    public Tenant withPublicMedia(String profileImagePath, String logoPath, String backgroundImagePath, Instant at) {
         return new Tenant(id, legalName, tradeName, slug, document, status, logoUrl, primaryColor, requireAssets,
                 subscriptionPlan, subscriptionBillingCycle, additionalUserSeats, subscriptionActive,
                 subscriptionPaidUntil, subscriptionPrice, couponCode, couponDiscountPercentage,
                 quoteCalculationMethod, enabledQuoteCalculationMethods, defaultSquareMeterPrice,
                 defaultCubicMeterPrice, publicPageEnabled, publicHeadline, publicDescription, publicWhatsapp,
                 publicEmail, publicCity, publicServiceArea, publicShowPrices, publicServiceSource,
-                publicManualServices, publicAccentColor, publicBackgroundColor, publicTextColor, logoPath,
-                backgroundImagePath, publicShowLogo, publicBackgroundOverlayPercentage, createdAt, at);
+                publicManualServices, publicAccentColor, publicBackgroundColor, publicTextColor, profileImagePath,
+                logoPath, backgroundImagePath, publicShowLogo, publicBackgroundOverlayPercentage, createdAt, at);
     }
 
     public int subscriptionUserLimit() {

@@ -51,7 +51,7 @@ public class PublicProfileMediaController {
     @GetMapping("/api/v1/public/media/{tenantDirectory}/{filename}")
     ResponseEntity<byte[]> image(
             @PathVariable @Pattern(regexp = "[0-9a-fA-F-]{36}") String tenantDirectory,
-            @PathVariable @Pattern(regexp = "(?:logo|background)-[0-9a-fA-F-]{36}\\.(?:png|jpg|webp)")
+            @PathVariable @Pattern(regexp = "(?:brand|profile|logo|background)-[0-9a-fA-F-]{36}\\.(?:png|jpg|webp)")
             String filename) {
         var content = media.load(tenantDirectory, filename);
         return ResponseEntity.ok()

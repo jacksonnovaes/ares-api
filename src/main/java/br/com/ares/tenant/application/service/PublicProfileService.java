@@ -108,8 +108,9 @@ public class PublicProfileService implements PublicProfileUseCase {
                 tenant.publicHeadline(), tenant.publicDescription(), tenant.publicWhatsapp(), tenant.publicEmail(),
                 tenant.publicCity(), tenant.publicServiceArea(), tenant.publicShowPrices(),
                 tenant.publicServiceSource(), tenant.publicAccentColor(), tenant.publicBackgroundColor(),
-                tenant.publicTextColor(), tenant.publicLogoPath(), tenant.publicBackgroundImagePath(),
-                tenant.publicShowLogo(), tenant.publicBackgroundOverlayPercentage(), publishedServices);
+                tenant.publicTextColor(), tenant.publicProfileImagePath(), tenant.publicLogoPath(),
+                tenant.publicBackgroundImagePath(), tenant.publicShowLogo(),
+                tenant.publicBackgroundOverlayPercentage(), publishedServices);
     }
 
     private Tenant requiredCurrentTenant() {
@@ -128,8 +129,8 @@ public class PublicProfileService implements PublicProfileUseCase {
                 tenant.publicServiceSource(), tenant.publicManualServices().stream()
                         .map(value -> new ManualService(value.name(), value.description(), value.basePrice())).toList(),
                 tenant.publicAccentColor(), tenant.publicBackgroundColor(), tenant.publicTextColor(),
-                tenant.publicLogoPath(), tenant.publicBackgroundImagePath(), tenant.publicShowLogo(),
-                tenant.publicBackgroundOverlayPercentage());
+                tenant.publicProfileImagePath(), tenant.publicLogoPath(), tenant.publicBackgroundImagePath(),
+                tenant.publicShowLogo(), tenant.publicBackgroundOverlayPercentage());
     }
 
     private List<PublicProfileManualService> sanitizeManualServices(List<ManualService> values) {

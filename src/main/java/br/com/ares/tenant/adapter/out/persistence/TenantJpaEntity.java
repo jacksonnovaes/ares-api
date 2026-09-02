@@ -80,6 +80,8 @@ class TenantJpaEntity {
     String publicBackgroundColor;
     @Column(name = "public_text_color", nullable = false, length = 7)
     String publicTextColor;
+    @Column(name = "public_profile_image_path", length = 500)
+    String publicProfileImagePath;
     @Column(name = "public_logo_path", length = 500)
     String publicLogoPath;
     @Column(name = "public_background_image_path", length = 500)
