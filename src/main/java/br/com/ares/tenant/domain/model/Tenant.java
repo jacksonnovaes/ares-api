@@ -15,6 +15,8 @@ public record Tenant(
         TenantStatus status,
         String logoUrl,
         String primaryColor,
+        String secondaryColor,
+        int borderRadius,
         boolean requireAssets,
         SubscriptionPlan subscriptionPlan,
         SubscriptionBillingCycle subscriptionBillingCycle,
@@ -54,7 +56,8 @@ public record Tenant(
     }
 
     public Tenant withBrandLogo(String value, Instant at) {
-        return new Tenant(id, legalName, tradeName, slug, document, status, value, primaryColor, requireAssets,
+        return new Tenant(id, legalName, tradeName, slug, document, status, value, primaryColor, secondaryColor,
+                borderRadius, requireAssets,
                 subscriptionPlan, subscriptionBillingCycle, additionalUserSeats, subscriptionActive,
                 subscriptionPaidUntil, subscriptionPrice, couponCode, couponDiscountPercentage,
                 quoteCalculationMethod, enabledQuoteCalculationMethods, defaultSquareMeterPrice,
@@ -65,8 +68,21 @@ public record Tenant(
                 publicBackgroundOverlayPercentage, createdAt, at);
     }
 
+    public Tenant withAppearance(String name, String primary, String secondary, int radius, Instant at) {
+        return new Tenant(id, legalName, name, slug, document, status, logoUrl, primary, secondary, radius,
+                requireAssets, subscriptionPlan, subscriptionBillingCycle, additionalUserSeats, subscriptionActive,
+                subscriptionPaidUntil, subscriptionPrice, couponCode, couponDiscountPercentage,
+                quoteCalculationMethod, enabledQuoteCalculationMethods, defaultSquareMeterPrice,
+                defaultCubicMeterPrice, publicPageEnabled, publicHeadline, publicDescription, publicWhatsapp,
+                publicEmail, publicCity, publicServiceArea, publicShowPrices, publicServiceSource,
+                publicManualServices, publicAccentColor, publicBackgroundColor, publicTextColor,
+                publicProfileImagePath, publicLogoPath, publicBackgroundImagePath, publicShowLogo,
+                publicBackgroundOverlayPercentage, createdAt, at);
+    }
+
     public Tenant withRequireAssets(boolean value, Instant at) {
-        return new Tenant(id, legalName, tradeName, slug, document, status, logoUrl, primaryColor, value,
+        return new Tenant(id, legalName, tradeName, slug, document, status, logoUrl, primaryColor, secondaryColor,
+                borderRadius, value,
                 subscriptionPlan, subscriptionBillingCycle, additionalUserSeats, subscriptionActive,
                 subscriptionPaidUntil, subscriptionPrice,
                 couponCode, couponDiscountPercentage, quoteCalculationMethod, enabledQuoteCalculationMethods,
@@ -81,7 +97,8 @@ public record Tenant(
     public Tenant withCompanySettings(boolean assetsRequired, QuoteCalculationMethod calculationMethod,
                                       Set<QuoteCalculationMethod> enabledCalculationMethods,
                                       BigDecimal squareMeterPrice, BigDecimal cubicMeterPrice, Instant at) {
-        return new Tenant(id, legalName, tradeName, slug, document, status, logoUrl, primaryColor, assetsRequired,
+        return new Tenant(id, legalName, tradeName, slug, document, status, logoUrl, primaryColor, secondaryColor,
+                borderRadius, assetsRequired,
                 subscriptionPlan, subscriptionBillingCycle, additionalUserSeats, subscriptionActive,
                 subscriptionPaidUntil, subscriptionPrice,
                 couponCode, couponDiscountPercentage, calculationMethod,
@@ -98,7 +115,8 @@ public record Tenant(
                                     List<PublicProfileManualService> manualServices,
                                     String accentColor, String backgroundColor, String textColor,
                                     boolean showLogo, int backgroundOverlayPercentage, Instant at) {
-        return new Tenant(id, legalName, tradeName, slug, document, status, logoUrl, primaryColor, requireAssets,
+        return new Tenant(id, legalName, tradeName, slug, document, status, logoUrl, primaryColor, secondaryColor,
+                borderRadius, requireAssets,
                 subscriptionPlan, subscriptionBillingCycle, additionalUserSeats, subscriptionActive,
                 subscriptionPaidUntil, subscriptionPrice, couponCode, couponDiscountPercentage,
                 quoteCalculationMethod, enabledQuoteCalculationMethods, defaultSquareMeterPrice,
@@ -109,7 +127,8 @@ public record Tenant(
     }
 
     public Tenant withPublicMedia(String profileImagePath, String logoPath, String backgroundImagePath, Instant at) {
-        return new Tenant(id, legalName, tradeName, slug, document, status, logoUrl, primaryColor, requireAssets,
+        return new Tenant(id, legalName, tradeName, slug, document, status, logoUrl, primaryColor, secondaryColor,
+                borderRadius, requireAssets,
                 subscriptionPlan, subscriptionBillingCycle, additionalUserSeats, subscriptionActive,
                 subscriptionPaidUntil, subscriptionPrice, couponCode, couponDiscountPercentage,
                 quoteCalculationMethod, enabledQuoteCalculationMethods, defaultSquareMeterPrice,

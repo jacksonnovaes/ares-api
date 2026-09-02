@@ -26,6 +26,8 @@ class TenantJpaEntity {
     @Enumerated(EnumType.STRING) @Column(nullable = false) TenantStatus status;
     @Column(name = "logo_url") String logoUrl;
     @Column(name = "primary_color") String primaryColor;
+    @Column(name = "secondary_color", nullable = false, length = 7) String secondaryColor;
+    @Column(name = "border_radius", nullable = false) int borderRadius;
     @Column(name = "require_assets", nullable = false) boolean requireAssets;
     @Enumerated(EnumType.STRING) @Column(name = "subscription_plan", nullable = false) SubscriptionPlan subscriptionPlan;
     @Enumerated(EnumType.STRING)

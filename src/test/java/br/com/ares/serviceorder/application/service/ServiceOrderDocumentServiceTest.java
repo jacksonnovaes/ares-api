@@ -135,7 +135,7 @@ class ServiceOrderDocumentServiceTest {
         UUID assetId = UUID.randomUUID();
         UUID serviceId = UUID.randomUUID();
         var tenant = new Tenant(tenantId, "Ares Serviços Ltda.", "Oficina Ares", "oficina-ares",
-                "12345678000190", TenantStatus.ACTIVE, null, "#2457E6", true,
+                "12345678000190", TenantStatus.ACTIVE, null, "#2457E6", "#16A085", 12, true,
                 SubscriptionPlan.PRO, br.com.ares.tenant.domain.model.SubscriptionBillingCycle.MONTHLY, 0,
                 true, NOW.plusSeconds(2_592_000), new BigDecimal("69.90"), null,
                 BigDecimal.ZERO.setScale(2),

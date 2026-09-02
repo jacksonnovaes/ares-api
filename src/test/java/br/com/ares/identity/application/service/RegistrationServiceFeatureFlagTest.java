@@ -54,7 +54,8 @@ class RegistrationServiceFeatureFlagTest {
         when(tenants.create(any())).thenAnswer(invocation -> {
             TenantManagementUseCase.CreateTenantCommand command = invocation.getArgument(0);
             return new Tenant(UUID.randomUUID(), command.legalName(), command.tradeName(), command.slug(),
-                    command.document(), TenantStatus.ACTIVE, command.logoUrl(), command.primaryColor(), true,
+                    command.document(), TenantStatus.ACTIVE, command.logoUrl(), command.primaryColor(),
+                    "#16A085", 12, true,
                     command.subscriptionPlan(), command.subscriptionBillingCycle(), command.additionalUserSeats(),
                     command.subscriptionActive(), command.subscriptionPaidUntil(), command.subscriptionPrice(),
                     command.couponCode(), command.couponDiscountPercentage(),

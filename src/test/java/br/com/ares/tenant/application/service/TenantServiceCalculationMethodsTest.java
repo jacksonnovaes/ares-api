@@ -56,7 +56,7 @@ class TenantServiceCalculationMethodsTest {
         service = new TenantService(repository, assetTypes, orderStatuses, currentActor, audit,
                 Clock.fixed(NOW, ZoneOffset.UTC));
         tenant = new Tenant(tenantId, "Ares Ltda.", "Ares", "ares", "12345678000190",
-                TenantStatus.ACTIVE, null, "#2457E6", true, SubscriptionPlan.SOLO,
+                TenantStatus.ACTIVE, null, "#2457E6", "#16A085", 12, true, SubscriptionPlan.SOLO,
                 SubscriptionBillingCycle.MONTHLY, 0, true, NOW.plusSeconds(2_592_000),
                 new BigDecimal("29.90"), null, BigDecimal.ZERO.setScale(2),
                 QuoteCalculationMethod.QUANTITY, EnumSet.allOf(QuoteCalculationMethod.class),

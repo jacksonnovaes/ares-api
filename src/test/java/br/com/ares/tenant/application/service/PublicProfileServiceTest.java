@@ -106,7 +106,8 @@ class PublicProfileServiceTest {
 
     private Tenant tenant(UUID id, boolean published, boolean showPrices) {
         return new Tenant(id, "João Serviços Elétricos", "João Eletricista", "joao-eletricista",
-                "12345678901", TenantStatus.ACTIVE, null, "#2457E6", false, SubscriptionPlan.SOLO,
+                "12345678901", TenantStatus.ACTIVE, null, "#2457E6", "#16A085", 12, false,
+                SubscriptionPlan.SOLO,
                 SubscriptionBillingCycle.MONTHLY, 0, true, NOW.plusSeconds(2_592_000),
                 new BigDecimal("29.90"), null, BigDecimal.ZERO.setScale(2), QuoteCalculationMethod.QUANTITY,
                 EnumSet.allOf(QuoteCalculationMethod.class), null, null, published,
