@@ -1,0 +1,146 @@
+name: ares
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    shm_size: 128mb
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?Defina POSTGRES_DB em .env.production}
+      POSTGRES_USER: ${POSTGRES_USER:?Defina POSTGRES_USER em .env.production}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD em .env.production}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    security_opt:
+      - no-new-privileges:true
+    logging: *default-logging
+    networks:
+      - ares_private
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    init: true
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SERVER_PORT: 8080
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:?Defina POSTGRES_DB em .env.production}
+      DB_USERNAME: ${POSTGRES_USER:?Defina POSTGRES_USER em .env.production}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD em .env.production}
+      DB_POOL_MAX_SIZE: ${DB_POOL_MAX_SIZE:-10}
+      DB_POOL_MIN_IDLE: ${DB_POOL_MIN_IDLE:-2}
+      JWT_SECRET_BASE64: ${JWT_SECRET_BASE64:?Defina JWT_SECRET_BASE64 em .env.production}
+      JWT_ISSUER: ${JWT_ISSUER:-ares-api}
+      SUBSCRIPTION_PAYMENT_SIMULATION_ENABLED: ${SUBSCRIPTION_PAYMENT_SIMULATION_ENABLED:-false}
+      LEGAL_TERMS_VERSION: ${LEGAL_TERMS_VERSION:-2026-08-27}
+      LEGAL_PRIVACY_VERSION: ${LEGAL_PRIVACY_VERSION:-2026-08-27}
+      PROMOTION_COUPON_CODE: ${PROMOTION_COUPON_CODE:-}
+      PROMOTION_DISCOUNT_PERCENTAGE: ${PROMOTION_DISCOUNT_PERCENTAGE:-0}
+      PROMOTION_VALID_UNTIL: ${PROMOTION_VALID_UNTIL:-}
+      SPRINGDOC_API_DOCS_ENABLED: ${SPRINGDOC_API_DOCS_ENABLED:-true}
+      SPRINGDOC_SWAGGER_UI_ENABLED: ${SPRINGDOC_SWAGGER_UI_ENABLED:-true}
+      PUBLIC_PROFILE_MEDIA_ROOT: /data/public-profile-media
+    expose:
+      - "8080"
+    volumes:
+      - public_profile_media:/data/public-profile-media
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:8080/actuator/health/readiness | grep -q '\"status\":\"UP\"'"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 45s
+    stop_grace_period: 30s
+    security_opt:
+      - no-new-privileges:true
+    logging: *default-logging
+    networks:
+      - ares_private
+
+  web:
+    build:
+      context: ../aresweb
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_LEGAL_OPERATOR_NAME: ${NEXT_PUBLIC_LEGAL_OPERATOR_NAME:?Defina NEXT_PUBLIC_LEGAL_OPERATOR_NAME em .env.production}
+        NEXT_PUBLIC_LEGAL_OPERATOR_DOCUMENT: ${NEXT_PUBLIC_LEGAL_OPERATOR_DOCUMENT:?Defina NEXT_PUBLIC_LEGAL_OPERATOR_DOCUMENT em .env.production}
+        NEXT_PUBLIC_LEGAL_OPERATOR_ADDRESS: ${NEXT_PUBLIC_LEGAL_OPERATOR_ADDRESS:?Defina NEXT_PUBLIC_LEGAL_OPERATOR_ADDRESS em .env.production}
+        NEXT_PUBLIC_PRIVACY_EMAIL: ${NEXT_PUBLIC_PRIVACY_EMAIL:?Defina NEXT_PUBLIC_PRIVACY_EMAIL em .env.production}
+        NEXT_PUBLIC_LEGAL_TERMS_VERSION: ${NEXT_PUBLIC_LEGAL_TERMS_VERSION:-2026-08-27}
+        NEXT_PUBLIC_LEGAL_PRIVACY_VERSION: ${NEXT_PUBLIC_LEGAL_PRIVACY_VERSION:-2026-08-27}
+    init: true
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      API_URL: http://api:8080
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+      NEXT_TELEMETRY_DISABLED: 1
+    expose:
+      - "3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:3000/"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    stop_grace_period: 30s
+    security_opt:
+      - no-new-privileges:true
+    logging: *default-logging
+    networks:
+      - ares_private
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:?Defina APP_DOMAIN em .env.production}
+      API_DOMAIN: ${API_DOMAIN:?Defina API_DOMAIN em .env.production}
+      ACME_EMAIL: ${ACME_EMAIL:?Defina ACME_EMAIL em .env.production}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      web:
+        condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
+    logging: *default-logging
+    networks:
+      - ares_private
+
+volumes:
+  postgres_data:
+  public_profile_media:
+  caddy_data:
+  caddy_config:
+
+networks:
+  ares_private:
+    driver: bridge

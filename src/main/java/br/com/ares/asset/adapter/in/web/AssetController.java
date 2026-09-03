@@ -1,6 +1,8 @@
 package br.com.ares.asset.adapter.in.web;
 
+import br.com.ares.asset.adapter.in.web.request.CreateAssetRequest;
 import br.com.ares.asset.application.port.in.AssetUseCase;
+import br.com.ares.asset.application.port.in.command.CreateAssetCommand;
 import br.com.ares.asset.domain.model.Asset;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
@@ -23,7 +25,7 @@ public class AssetController {
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAuthority('ASSET_CREATE')")
     Asset create(@Valid @RequestBody CreateAssetRequest r) {
-        return assets.create(new AssetUseCase.CreateAssetCommand(r.customerId(), r.type(), r.name(), r.brand(),
+        return assets.create(new CreateAssetCommand(r.customerId(), r.type(), r.name(), r.brand(),
                 r.model(), r.serialNumber(), r.attributes()));
     }
 
@@ -39,10 +41,5 @@ public class AssetController {
         return assets.get(id);
     }
 
-    record CreateAssetRequest(@NotNull UUID customerId,
-                              @NotBlank @Pattern(regexp = "[A-Za-z0-9_]{1,50}") String type,
-                              @NotBlank @Size(max = 160) String name, @Size(max = 100) String brand,
-                              @Size(max = 100) String model, @Size(max = 120) String serialNumber,
-                              Map<String, String> attributes) {
-    }
+
 }

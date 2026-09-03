@@ -43,4 +43,8 @@ public class ServiceCatalogService implements ServiceCatalogUseCase, ServiceCata
     public boolean anyRequiresAsset(UUID tenantId, Set<UUID> ids) {
         return ids!=null && !ids.isEmpty() && repository.existsMaintenanceByTenantIdAndIds(tenantId,ids);
     }
+    @Override @Transactional(readOnly=true)
+    public List<CatalogService> listActive(UUID tenantId) {
+        return repository.findAllByTenantId(tenantId).stream().filter(CatalogService::active).toList();
+    }
 }

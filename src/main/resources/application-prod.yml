@@ -5,10 +5,14 @@ spring:
     url: ${DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: ${DB_POOL_MAX_SIZE:10}
+      minimum-idle: ${DB_POOL_MIN_IDLE:2}
+      connection-timeout: ${DB_CONNECTION_TIMEOUT_MS:30000}
   jpa:
     open-in-view: false
     hibernate:
-      ddl-auto: none
+      ddl-auto: validate
     properties:
       hibernate:
         jdbc:
@@ -21,9 +25,12 @@ spring:
   mvc:
     problemdetails:
       enabled: true
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
 
 server:
   port: ${SERVER_PORT:8080}
+  shutdown: graceful
   forward-headers-strategy: framework
   error:
     include-message: never
@@ -38,9 +45,15 @@ management:
       probes:
         enabled: true
 
+springdoc:
+  api-docs:
+    enabled: ${SPRINGDOC_API_DOCS_ENABLED:true}
+  swagger-ui:
+    enabled: ${SPRINGDOC_SWAGGER_UI_ENABLED:true}
+
 ares:
   features:
-    subscription-payment-simulation-enabled: ${SUBSCRIPTION_PAYMENT_SIMULATION_ENABLED:true}
+    subscription-payment-simulation-enabled: ${SUBSCRIPTION_PAYMENT_SIMULATION_ENABLED:false}
   legal:
     terms-version: ${LEGAL_TERMS_VERSION:2026-08-27}
     privacy-version: ${LEGAL_PRIVACY_VERSION:2026-08-27}
@@ -50,7 +63,7 @@ ares:
     valid-until: ${PROMOTION_VALID_UNTIL:}
   security:
     issuer: ${JWT_ISSUER:ares-api}
-    secret-base64: ${JWT_SECRET_BASE64:VGhpcy1pcy1hLWRldmVsb3BtZW50LWtleS1jaGFuZ2UtaXQtaW4tcHJvZHVjdGlvbi0xMjM0NTY=}
+    secret-base64: ${JWT_SECRET_BASE64}
     access-token-ttl: ${ACCESS_TOKEN_TTL:PT15M}
     refresh-token-ttl: ${REFRESH_TOKEN_TTL:P30D}
     password-reset-ttl: ${PASSWORD_RESET_TTL:PT30M}

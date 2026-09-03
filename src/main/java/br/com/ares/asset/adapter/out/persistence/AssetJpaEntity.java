@@ -1,34 +1,39 @@
 package br.com.ares.asset.adapter.out.persistence;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.Instant;
 import java.util.UUID;
 
 @Entity
 @Table(name = "assets")
-class AssetJpaEntity {
+@Getter
+@Setter
+public class AssetJpaEntity {
     @Id
-    UUID id;
+    private UUID id;
     @Column(name = "tenant_id", nullable = false)
-    UUID tenantId;
+    private UUID tenantId;
     @Column(name = "customer_id", nullable = false)
-    UUID customerId;
+    private UUID customerId;
     @Column(nullable = false, length = 50)
-    String type;
+    private String type;
     @Column(nullable = false)
-    String name;
-    String brand;
-    String model;
+    private String name;
+    private String brand;
+    private String model;
     @Column(name = "serial_number")
-    String serialNumber;
+    private String serialNumber;
     @Column(name = "attributes_json", nullable = false, columnDefinition = "text")
-    String attributesJson;
+    private String attributesJson;
     @Column(name = "created_at", nullable = false)
-    Instant createdAt;
+    private Instant createdAt;
     @Column(name = "updated_at", nullable = false)
-    Instant updatedAt;
+    private Instant updatedAt;
 
-    protected AssetJpaEntity() {
+    public AssetJpaEntity() {
     }
+
 }

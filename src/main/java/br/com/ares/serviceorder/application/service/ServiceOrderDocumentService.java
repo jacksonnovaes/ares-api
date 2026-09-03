@@ -84,6 +84,9 @@ public class ServiceOrderDocumentService implements ServiceOrderDocumentUseCase 
             assetView = new AssetView(asset.id(), asset.type(), assetType.name(), asset.name(), asset.brand(),
                     asset.model(), asset.serialNumber());
         }
+        DeliveryView deliveryView = order.delivery() == null ? null : new DeliveryView(
+                order.delivery().deliveredAt(), order.delivery().receivedBy(), order.delivery().warrantyDays(),
+                order.delivery().warrantyUntil(), order.delivery().warrantyTerms(), order.delivery().notes());
         return new ServiceOrderDocument(
                 new OrderView(order.id(), order.title(), order.description(), order.status(), status.name(), order.priority(),
                         order.estimatedValue(), order.finalValue(), order.openedAt(), order.dueAt(),
@@ -91,12 +94,13 @@ public class ServiceOrderDocumentService implements ServiceOrderDocumentUseCase 
                 new CompanyView(company.id(), company.legalName(), company.tradeName(), company.document(),
                         company.logoUrl(), company.primaryColor()),
                 new CustomerView(customer.id(), customer.name(), customer.document(), customer.email(),
-                        customer.phone()),
+                        customer.phone(), customer.address()),
                 assetView,
                 order.quoteLines().stream().map(line -> new QuoteLineView(line.serviceId(), line.description(),
-                        line.quantity(), line.unit(), line.unitPrice(), line.calculationMethod(),
+                        line.notes(), line.quantity(), line.unit(), line.unitPrice(), line.calculationMethod(),
                         line.widthMeters(), line.lengthMeters(), line.heightMeters(),
-                        line.billableQuantity(), line.total())).toList()
+                        line.billableQuantity(), line.total())).toList(),
+                deliveryView
         );
     }
 
@@ -169,6 +173,9 @@ public class ServiceOrderDocumentService implements ServiceOrderDocumentUseCase 
             }
             body.append(formatMoney(line.unitPrice()))
                     .append(" = ").append(formatMoney(line.total())).append('\n');
+            if (line.notes() != null && !line.notes().isBlank()) {
+                body.append("  Observações: ").append(line.notes()).append('\n');
+            }
         });
 
         if (order.estimatedValue() != null) {
@@ -176,6 +183,25 @@ public class ServiceOrderDocumentService implements ServiceOrderDocumentUseCase 
         }
         if (order.finalValue() != null) {
             body.append("Valor final: ").append(formatMoney(order.finalValue())).append('\n');
+        }
+
+        if (document.delivery() != null) {
+            var delivery = document.delivery();
+            body.append("\nEntrega e garantia:\n")
+                    .append("Entregue em: ").append(DATE_TIME.format(delivery.deliveredAt())).append('\n')
+                    .append("Recebido por: ").append(delivery.receivedBy()).append('\n');
+            if (delivery.warrantyDays() > 0) {
+                body.append("Garantia: ").append(delivery.warrantyDays()).append(" dias, até ")
+                        .append(DATE_TIME.format(delivery.warrantyUntil())).append('\n');
+            } else {
+                body.append("Garantia adicional: não informada.\n");
+            }
+            if (delivery.warrantyTerms() != null) {
+                body.append("Condições: ").append(delivery.warrantyTerms()).append('\n');
+            }
+            if (delivery.notes() != null) {
+                body.append("Observações da entrega: ").append(delivery.notes()).append('\n');
+            }
         }
 
         return body.append("\nAtenciosamente,\n").append(document.company().tradeName()).toString();

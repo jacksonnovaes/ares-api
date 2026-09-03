@@ -9,6 +9,7 @@ import br.com.ares.shared.application.AuditLogPort;
 import br.com.ares.shared.domain.BusinessException;
 import br.com.ares.tenant.application.port.in.TenantManagementUseCase;
 import br.com.ares.tenant.application.service.SubscriptionPricingService;
+import br.com.ares.tenant.domain.model.SubscriptionBillingCycle;
 import br.com.ares.tenant.domain.model.SubscriptionPlan;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -68,13 +69,16 @@ public class RegistrationService implements RegistrationUseCase {
         }
 
         Instant now = clock.instant();
-        var price = pricing.quote(command.plan(), command.couponCode());
+        var price = pricing.quote(command.plan(), command.billingCycle(), command.additionalUserSeats(),
+                command.couponCode());
         boolean paymentApproved = subscriptionPaymentSimulationEnabled && command.simulatedPaymentApproved();
-        Instant paidUntil = paymentApproved ? now.plus(30, ChronoUnit.DAYS) : null;
+        long paidDays = command.billingCycle() == SubscriptionBillingCycle.ANNUAL ? 365 : 30;
+        Instant paidUntil = paymentApproved ? now.plus(paidDays, ChronoUnit.DAYS) : null;
         var tenant = tenants.create(new TenantManagementUseCase.CreateTenantCommand(
                 command.legalName(), command.tradeName(), command.slug(), command.document(),
-                command.logoUrl(), command.primaryColor(), command.plan(), paymentApproved,
-                paidUntil, price.finalPrice(), price.couponCode(), price.discountPercentage()));
+                command.logoUrl(), command.primaryColor(), command.plan(), command.billingCycle(),
+                command.additionalUserSeats(), paymentApproved, paidUntil, price.finalPrice(),
+                price.couponCode(), price.discountPercentage()));
         Set<Role> roles = Set.of(Role.ADMIN);
         var user = new User(UUID.randomUUID(), tenant.id(), null, command.adminName().trim(), email,
                 passwordHasher.hash(command.password()), onlyDigits(command.whatsapp()), "Administrador", UserStatus.ACTIVE,
@@ -83,10 +87,14 @@ public class RegistrationService implements RegistrationUseCase {
         var registrationDetails = new java.util.LinkedHashMap<String, Object>();
         registrationDetails.put("slug", tenant.slug());
         registrationDetails.put("plan", command.plan().name());
+        registrationDetails.put("billingCycle", command.billingCycle().name());
+        registrationDetails.put("additionalUserSeats", command.additionalUserSeats());
+        registrationDetails.put("userLimit", price.userLimit());
         registrationDetails.put("subscriptionActive", paymentApproved);
         registrationDetails.put("paymentSimulationEnabled", subscriptionPaymentSimulationEnabled);
         registrationDetails.put("originalPrice", price.originalPrice());
-        registrationDetails.put("monthlyPrice", price.finalPrice());
+        registrationDetails.put("price", price.finalPrice());
+        registrationDetails.put("monthlyEquivalent", price.monthlyEquivalent());
         registrationDetails.put("discountPercentage", price.discountPercentage());
         if (price.couponCode() != null) registrationDetails.put("couponCode", price.couponCode());
         audit.record(tenant.id(), user.id(), "TENANT_REGISTERED", "TENANT",
@@ -96,39 +104,53 @@ public class RegistrationService implements RegistrationUseCase {
                         "ipAddress", limited(command.acceptanceIpAddress(), 45),
                         "userAgent", limited(command.acceptanceUserAgent(), 500)));
         return new RegistrationResult(tenant.id(), user.id(), tenant.slug(), command.plan(),
-                paymentApproved, paidUntil, price.originalPrice(), price.discountPercentage(),
-                price.finalPrice(), price.couponCode());
+                command.billingCycle(), command.additionalUserSeats(), price.userLimit(), paymentApproved,
+                paidUntil, price.originalPrice(), price.discountPercentage(), price.finalPrice(),
+                price.monthlyEquivalent(), price.couponCode());
     }
 
     @Override
     public RegistrationConfiguration registrationConfiguration() {
+        var plans = java.util.Arrays.stream(SubscriptionPlan.values())
+                .map(plan -> new PlanOption(plan, plan.displayName(), plan.monthlyPrice(), plan.annualPrice(),
+                        plan.includedUsers(), plan.features()))
+                .toList();
         return new RegistrationConfiguration(subscriptionPaymentSimulationEnabled, pricing.couponEnabled(),
-                currentTermsVersion, currentPrivacyVersion);
+                currentTermsVersion, currentPrivacyVersion, plans,
+                SubscriptionPricingService.ADDITIONAL_USER_MONTHLY_PRICE,
+                SubscriptionPricingService.ADDITIONAL_USER_ANNUAL_PRICE);
     }
 
     @Override
     public WhatsAppSimulation simulatePlanWhatsApp(PlanWhatsAppCommand command) {
         SubscriptionPlan plan = command.plan();
-        var priceQuote = pricing.quote(plan, command.couponCode());
+        var priceQuote = pricing.quote(plan, command.billingCycle(), command.additionalUserSeats(),
+                command.couponCode());
         String destination = onlyDigits(command.whatsapp());
         String company = command.tradeName() == null || command.tradeName().isBlank()
                 ? "sua empresa" : command.tradeName().trim();
         String price = "R$ " + priceQuote.finalPrice().toPlainString().replace('.', ',');
+        String period = command.billingCycle() == SubscriptionBillingCycle.ANNUAL ? "ao ano" : "ao mês";
         String message = "Olá! Esta é uma simulação da Ares para " + company + ". Você escolheu o plano "
-                + plan.displayName() + " por " + price + " ao mês"
+                + plan.displayName() + " por " + price + " " + period
+                + " com limite de " + priceQuote.userLimit() + " usuário(s)"
                 + (priceQuote.couponApplied() ? " com o cupom " + priceQuote.couponCode() : "")
-                + ". Após a confirmação da mensalidade, "
+                + ". Após a confirmação da assinatura, "
                 + "o acesso da empresa ficará ativo.";
         return new WhatsAppSimulation("SIMULATION", destination, plan, plan.displayName(),
+                command.billingCycle(), command.additionalUserSeats(), priceQuote.userLimit(),
                 priceQuote.originalPrice(), priceQuote.discountPercentage(), priceQuote.discountAmount(),
-                priceQuote.finalPrice(), priceQuote.couponCode(), message, clock.instant());
+                priceQuote.finalPrice(), priceQuote.monthlyEquivalent(), priceQuote.couponCode(), message,
+                clock.instant());
     }
 
     @Override
-    public CouponValidation validateCoupon(SubscriptionPlan plan, String couponCode) {
-        var price = pricing.quote(plan, couponCode);
-        return new CouponValidation(plan, price.originalPrice(), price.discountPercentage(),
-                price.discountAmount(), price.finalPrice(), price.couponCode(), price.couponApplied());
+    public CouponValidation validateCoupon(SubscriptionPlan plan, SubscriptionBillingCycle billingCycle,
+                                           int additionalUserSeats, String couponCode) {
+        var price = pricing.quote(plan, billingCycle, additionalUserSeats, couponCode);
+        return new CouponValidation(plan, billingCycle, additionalUserSeats, price.userLimit(),
+                price.originalPrice(), price.discountPercentage(), price.discountAmount(), price.finalPrice(),
+                price.monthlyEquivalent(), price.couponCode(), price.couponApplied());
     }
 
     private void validateLegalAcceptance(RegisterTenantAdminCommand command) {

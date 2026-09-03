@@ -13,6 +13,7 @@ import br.com.ares.serviceorder.application.port.in.ServiceOrderStatusDirectory;
 import br.com.ares.serviceorder.application.port.in.ServiceOrderUseCase;
 import br.com.ares.serviceorder.application.port.out.ServiceOrderEmailSender;
 import br.com.ares.serviceorder.domain.model.ServiceOrder;
+import br.com.ares.serviceorder.domain.model.ServiceOrderDelivery;
 import br.com.ares.serviceorder.domain.model.ServiceOrderLine;
 import br.com.ares.serviceorder.domain.model.ServiceOrderPriority;
 import br.com.ares.serviceorder.domain.model.ServiceOrderStatusDefinition;
@@ -72,8 +73,8 @@ class ServiceOrderDocumentServiceTest {
         when(customers.get(fixture.customer.id())).thenReturn(fixture.customer);
         when(assets.get(fixture.asset.id())).thenReturn(fixture.asset);
         when(assetTypes.required(fixture.tenant.id(), fixture.asset.type())).thenReturn(fixture.assetType);
-        when(statuses.required(fixture.tenant.id(), "OPEN")).thenReturn(new ServiceOrderStatusDefinition(
-                UUID.randomUUID(), fixture.tenant.id(), "OPEN", "Aberto", true, true, 10, NOW, NOW));
+        when(statuses.required(fixture.tenant.id(), "COMPLETED")).thenReturn(new ServiceOrderStatusDefinition(
+                UUID.randomUUID(), fixture.tenant.id(), "COMPLETED", "Concluída", true, true, 90, NOW, NOW));
         when(tenants.requiredById(fixture.tenant.id())).thenReturn(fixture.tenant);
     }
 
@@ -89,6 +90,9 @@ class ServiceOrderDocumentServiceTest {
         assertThat(document.quoteLines()).singleElement()
                 .extracting(ServiceOrderDocumentUseCase.QuoteLineView::description)
                 .isEqualTo("Troca de óleo");
+        assertThat(document.quoteLines().getFirst().notes()).isEqualTo("Utilizar óleo sintético");
+        assertThat(document.delivery().receivedBy()).isEqualTo("Maria da Silva");
+        assertThat(document.delivery().warrantyDays()).isEqualTo(90);
     }
 
     @Test
@@ -103,7 +107,9 @@ class ServiceOrderDocumentServiceTest {
         assertThat(result.deliveryMode()).isEqualTo("SIMULATION");
         assertThat(result.recipient()).isEqualTo("cliente@example.com");
         assertThat(result.subject()).contains("Ordem de serviço", "Oficina Ares");
-        assertThat(result.body()).contains("Revisão preventiva", "Troca de óleo", "R$ 350,00");
+        assertThat(result.body()).contains("Revisão preventiva", "Troca de óleo",
+                "Observações: Utilizar óleo sintético", "R$ 350,00", "Entrega e garantia",
+                "Garantia: 90 dias");
         assertThat(result.processedAt()).isEqualTo(NOW);
 
         var message = ArgumentCaptor.forClass(ServiceOrderEmailSender.EmailMessage.class);
@@ -117,7 +123,8 @@ class ServiceOrderDocumentServiceTest {
     @Test
     void requiresRecipientWhenCustomerHasNoEmail() {
         var customerWithoutEmail = new Customer(fixture.customer.id(), fixture.tenant.id(), CustomerType.PERSON,
-                "Cliente", "12345678901", null, null, null, CustomerStatus.ACTIVE, NOW, NOW);
+                "Cliente", "12345678901", null, null, "Rua sem número", null,
+                CustomerStatus.ACTIVE, NOW, NOW);
         when(customers.get(fixture.customer.id())).thenReturn(customerWithoutEmail);
 
         assertThatThrownBy(() -> service.sendEmail(fixture.order.id(),
@@ -132,21 +139,30 @@ class ServiceOrderDocumentServiceTest {
         UUID assetId = UUID.randomUUID();
         UUID serviceId = UUID.randomUUID();
         var tenant = new Tenant(tenantId, "Ares Serviços Ltda.", "Oficina Ares", "oficina-ares",
-                "12345678000190", TenantStatus.ACTIVE, null, "#2457E6", true,
-                SubscriptionPlan.PROFESSIONAL, true, NOW.plusSeconds(2_592_000),
-                new BigDecimal("99.90"), null, BigDecimal.ZERO.setScale(2),
-                br.com.ares.tenant.domain.model.QuoteCalculationMethod.QUANTITY, null, null, NOW, NOW);
+                "12345678000190", TenantStatus.ACTIVE, null, "#2457E6", "#16A085", 12, true,
+                SubscriptionPlan.PRO, br.com.ares.tenant.domain.model.SubscriptionBillingCycle.MONTHLY, 0,
+                true, NOW.plusSeconds(2_592_000), new BigDecimal("69.90"), null,
+                BigDecimal.ZERO.setScale(2),
+                br.com.ares.tenant.domain.model.QuoteCalculationMethod.QUANTITY,
+                java.util.EnumSet.allOf(br.com.ares.tenant.domain.model.QuoteCalculationMethod.class),
+                null, null, false, null, null, null, null, null, null, false,
+                br.com.ares.tenant.domain.model.PublicServiceSource.CATALOG, java.util.List.of(),
+                "#2457E6", "#F6F4ED", "#142019", null, null, null, true, 18, NOW, NOW);
         var customer = new Customer(customerId, tenantId, CustomerType.PERSON, "Maria da Silva",
-                "12345678901", "cliente@example.com", "11999999999", null, CustomerStatus.ACTIVE, NOW, NOW);
+                "12345678901", "cliente@example.com", "11999999999",
+                "Rua das Flores, 100 - Centro", null, CustomerStatus.ACTIVE, NOW, NOW);
         var assetType = new AssetType(UUID.randomUUID(), tenantId, "VEHICLE", "Veículo", true, true, NOW, NOW);
         var asset = new Asset(assetId, tenantId, customerId, "VEHICLE", "Veículo principal",
                 "Toyota", "Corolla", "ABC123", Map.of(), NOW, NOW);
-        var quoteLine = new ServiceOrderLine(serviceId, "Troca de óleo", BigDecimal.ONE,
-                "UN", new BigDecimal("350.00"));
+        var quoteLine = new ServiceOrderLine(serviceId, "Troca de óleo", "Utilizar óleo sintético",
+                BigDecimal.ONE, "UN", new BigDecimal("350.00"),
+                br.com.ares.tenant.domain.model.QuoteCalculationMethod.QUANTITY, null, null, null);
+        var delivery = new ServiceOrderDelivery(NOW, "Maria da Silva", 90,
+                NOW.plusSeconds(90L * 86400), "Garantia dos serviços executados.", "Entregue testado.");
         var order = new ServiceOrder(UUID.randomUUID(), tenantId, customerId, assetId, Set.of(serviceId),
-                List.of(quoteLine), "Revisão preventiva", "Executar revisão completa", "OPEN",
-                ServiceOrderPriority.NORMAL, new BigDecimal("350.00"), null, null, NOW, NOW.plusSeconds(86400),
-                null, NOW, NOW);
+                List.of(quoteLine), "Revisão preventiva", "Executar revisão completa", "COMPLETED",
+                ServiceOrderPriority.NORMAL, new BigDecimal("350.00"), new BigDecimal("350.00"), null, NOW,
+                NOW.plusSeconds(86400), NOW, delivery, NOW, NOW);
         return new Fixture(tenant, customer, assetType, asset, order);
     }
 

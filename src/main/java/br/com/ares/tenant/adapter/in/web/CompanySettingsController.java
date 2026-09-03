@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotEmpty;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/v1/company-settings")
@@ -34,12 +36,14 @@ public class CompanySettingsController {
     @PreAuthorize("hasAuthority('TENANT_CONFIGURE')")
     CompanySettingsUseCase.CompanySettings update(@Valid @RequestBody UpdateCompanySettingsRequest request) {
         return settings.update(new CompanySettingsUseCase.UpdateCompanySettingsCommand(request.requireAssets(),
-                request.quoteCalculationMethod(), request.defaultSquareMeterPrice(),
+                request.quoteCalculationMethod(), request.enabledQuoteCalculationMethods(),
+                request.defaultSquareMeterPrice(),
                 request.defaultCubicMeterPrice()));
     }
 
     record UpdateCompanySettingsRequest(@NotNull Boolean requireAssets,
                                         @NotNull QuoteCalculationMethod quoteCalculationMethod,
+                                        @NotEmpty Set<QuoteCalculationMethod> enabledQuoteCalculationMethods,
                                         @DecimalMin("0.01") @Digits(integer = 10, fraction = 2)
                                         BigDecimal defaultSquareMeterPrice,
                                         @DecimalMin("0.01") @Digits(integer = 10, fraction = 2)

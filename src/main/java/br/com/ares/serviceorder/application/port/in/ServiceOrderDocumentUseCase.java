@@ -22,7 +22,8 @@ public interface ServiceOrderDocumentUseCase {
             CompanyView company,
             CustomerView customer,
             AssetView asset,
-            List<QuoteLineView> quoteLines
+            List<QuoteLineView> quoteLines,
+            DeliveryView delivery
     ) {
     }
 
@@ -58,7 +59,8 @@ public interface ServiceOrderDocumentUseCase {
             String name,
             String document,
             String email,
-            String phone
+            String phone,
+            String address
     ) {
     }
 
@@ -76,6 +78,7 @@ public interface ServiceOrderDocumentUseCase {
     record QuoteLineView(
             UUID serviceId,
             String description,
+            String notes,
             BigDecimal quantity,
             String unit,
             BigDecimal unitPrice,
@@ -85,6 +88,16 @@ public interface ServiceOrderDocumentUseCase {
             BigDecimal heightMeters,
             BigDecimal billableQuantity,
             BigDecimal total
+    ) {
+    }
+
+    record DeliveryView(
+            Instant deliveredAt,
+            String receivedBy,
+            int warrantyDays,
+            Instant warrantyUntil,
+            String warrantyTerms,
+            String notes
     ) {
     }
 
