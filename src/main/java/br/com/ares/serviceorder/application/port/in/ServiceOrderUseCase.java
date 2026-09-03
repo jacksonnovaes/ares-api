@@ -15,7 +15,12 @@ public interface ServiceOrderUseCase {
     record CreateOrderCommand(UUID customerId, UUID assetId, List<QuoteLineCommand> quoteLines, String title,
                               String description, ServiceOrderPriority priority,
                               UUID assignedTechnicianId, Instant dueAt) {}
-    record ChangeStatusCommand(String status, BigDecimal finalValue) {}
+    record ChangeStatusCommand(String status, BigDecimal finalValue, String deliveryReceivedBy,
+                               Integer warrantyDays, String warrantyTerms, String deliveryNotes) {
+        public ChangeStatusCommand(String status, BigDecimal finalValue) {
+            this(status, finalValue, null, null, null, null);
+        }
+    }
     record UpdateQuoteCommand(UUID assetId, List<QuoteLineCommand> quoteLines) {}
     record QuoteLineCommand(UUID serviceId, String description, String notes, BigDecimal quantity,
                             String unit, BigDecimal unitPrice, QuoteCalculationMethod calculationMethod,

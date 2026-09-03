@@ -2,6 +2,7 @@ package br.com.ares.serviceorder.adapter.out.persistence;
 
 import br.com.ares.serviceorder.application.port.out.ServiceOrderRepository;
 import br.com.ares.serviceorder.domain.model.ServiceOrder;
+import br.com.ares.serviceorder.domain.model.ServiceOrderDelivery;
 import br.com.ares.serviceorder.domain.model.ServiceOrderLine;
 import br.com.ares.serviceorder.domain.model.ServiceOrderPriority;
 import org.junit.jupiter.api.Test;
@@ -32,9 +33,11 @@ class ServiceOrderQuotePersistenceIntegrationTest {
                 new ServiceOrderLine(null, "Assentamento de revestimento", new BigDecimal("12"),
                         "M2", new BigDecimal("80.00"))
         );
+        var delivery = new ServiceOrderDelivery(now, "Maria da Silva", 90,
+                now.plusSeconds(90L * 86400), "Garantia dos serviços executados.", "Entregue testado.");
         var order = new ServiceOrder(orderId, UUID.randomUUID(), UUID.randomUUID(), null, Set.of(),
-                lines, "Reforma", "Orçamento de alvenaria", "OPEN", ServiceOrderPriority.NORMAL,
-                new BigDecimal("1342.50"), null, null, now, null, null, now, now);
+                lines, "Reforma", "Orçamento de alvenaria", "COMPLETED", ServiceOrderPriority.NORMAL,
+                new BigDecimal("1342.50"), null, null, now, null, now, delivery, now, now);
 
         repository.save(order);
         ServiceOrder restored = repository.findByIdAndTenantId(orderId, order.tenantId()).orElseThrow();
@@ -45,5 +48,6 @@ class ServiceOrderQuotePersistenceIntegrationTest {
         assertThat(restored.quoteLines().getFirst().notes()).isEqualTo("Retirar o entulho ao finalizar");
         assertThat(restored.quoteLines().getLast().unitPrice()).isEqualByComparingTo("80.00");
         assertThat(restored.assetId()).isNull();
+        assertThat(restored.delivery()).isEqualTo(delivery);
     }
 }

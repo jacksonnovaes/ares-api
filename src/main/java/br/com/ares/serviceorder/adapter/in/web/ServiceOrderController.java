@@ -41,7 +41,8 @@ public class ServiceOrderController{
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasAuthority('SERVICE_ORDER_UPDATE') and !hasRole('CUSTOMER')")
     ServiceOrder status(@PathVariable UUID id,@Valid @RequestBody ChangeStatusRequest r){return orders.changeStatus(id,
-            new ServiceOrderUseCase.ChangeStatusCommand(r.status(),r.finalValue()));}
+            new ServiceOrderUseCase.ChangeStatusCommand(r.status(),r.finalValue(),r.deliveryReceivedBy(),
+                    r.warrantyDays(),r.warrantyTerms(),r.deliveryNotes()));}
     @PutMapping("/{id}/quote")
     @PreAuthorize("hasAuthority('SERVICE_ORDER_UPDATE') and !hasRole('CUSTOMER')")
     ServiceOrder quote(@PathVariable UUID id,@Valid @RequestBody UpdateQuoteRequest r){return orders.updateQuote(id,
@@ -66,6 +67,11 @@ public class ServiceOrderController{
             @DecimalMin("0.001") @Digits(integer=9,fraction=3)BigDecimal widthMeters,
             @DecimalMin("0.001") @Digits(integer=9,fraction=3)BigDecimal lengthMeters,
             @DecimalMin("0.001") @Digits(integer=9,fraction=3)BigDecimal heightMeters){}
-    record ChangeStatusRequest(@NotBlank @Size(max=50)String status,@DecimalMin("0.00")BigDecimal finalValue){}
+    record ChangeStatusRequest(@NotBlank @Size(max=50)String status,
+            @DecimalMin("0.00") @Digits(integer=13,fraction=2) BigDecimal finalValue,
+            @Size(max=160) String deliveryReceivedBy,
+            @Min(0) @Max(3650) Integer warrantyDays,
+            @Size(max=2000) String warrantyTerms,
+            @Size(max=2000) String deliveryNotes){}
     record SendEmailRequest(@Email @Size(max=254) String recipient){}
 }

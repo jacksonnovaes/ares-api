@@ -13,6 +13,7 @@ import br.com.ares.serviceorder.application.port.in.ServiceOrderStatusDirectory;
 import br.com.ares.serviceorder.application.port.in.ServiceOrderUseCase;
 import br.com.ares.serviceorder.application.port.out.ServiceOrderEmailSender;
 import br.com.ares.serviceorder.domain.model.ServiceOrder;
+import br.com.ares.serviceorder.domain.model.ServiceOrderDelivery;
 import br.com.ares.serviceorder.domain.model.ServiceOrderLine;
 import br.com.ares.serviceorder.domain.model.ServiceOrderPriority;
 import br.com.ares.serviceorder.domain.model.ServiceOrderStatusDefinition;
@@ -72,8 +73,8 @@ class ServiceOrderDocumentServiceTest {
         when(customers.get(fixture.customer.id())).thenReturn(fixture.customer);
         when(assets.get(fixture.asset.id())).thenReturn(fixture.asset);
         when(assetTypes.required(fixture.tenant.id(), fixture.asset.type())).thenReturn(fixture.assetType);
-        when(statuses.required(fixture.tenant.id(), "OPEN")).thenReturn(new ServiceOrderStatusDefinition(
-                UUID.randomUUID(), fixture.tenant.id(), "OPEN", "Aberto", true, true, 10, NOW, NOW));
+        when(statuses.required(fixture.tenant.id(), "COMPLETED")).thenReturn(new ServiceOrderStatusDefinition(
+                UUID.randomUUID(), fixture.tenant.id(), "COMPLETED", "Concluída", true, true, 90, NOW, NOW));
         when(tenants.requiredById(fixture.tenant.id())).thenReturn(fixture.tenant);
     }
 
@@ -90,6 +91,8 @@ class ServiceOrderDocumentServiceTest {
                 .extracting(ServiceOrderDocumentUseCase.QuoteLineView::description)
                 .isEqualTo("Troca de óleo");
         assertThat(document.quoteLines().getFirst().notes()).isEqualTo("Utilizar óleo sintético");
+        assertThat(document.delivery().receivedBy()).isEqualTo("Maria da Silva");
+        assertThat(document.delivery().warrantyDays()).isEqualTo(90);
     }
 
     @Test
@@ -105,7 +108,8 @@ class ServiceOrderDocumentServiceTest {
         assertThat(result.recipient()).isEqualTo("cliente@example.com");
         assertThat(result.subject()).contains("Ordem de serviço", "Oficina Ares");
         assertThat(result.body()).contains("Revisão preventiva", "Troca de óleo",
-                "Observações: Utilizar óleo sintético", "R$ 350,00");
+                "Observações: Utilizar óleo sintético", "R$ 350,00", "Entrega e garantia",
+                "Garantia: 90 dias");
         assertThat(result.processedAt()).isEqualTo(NOW);
 
         var message = ArgumentCaptor.forClass(ServiceOrderEmailSender.EmailMessage.class);
@@ -153,10 +157,12 @@ class ServiceOrderDocumentServiceTest {
         var quoteLine = new ServiceOrderLine(serviceId, "Troca de óleo", "Utilizar óleo sintético",
                 BigDecimal.ONE, "UN", new BigDecimal("350.00"),
                 br.com.ares.tenant.domain.model.QuoteCalculationMethod.QUANTITY, null, null, null);
+        var delivery = new ServiceOrderDelivery(NOW, "Maria da Silva", 90,
+                NOW.plusSeconds(90L * 86400), "Garantia dos serviços executados.", "Entregue testado.");
         var order = new ServiceOrder(UUID.randomUUID(), tenantId, customerId, assetId, Set.of(serviceId),
-                List.of(quoteLine), "Revisão preventiva", "Executar revisão completa", "OPEN",
-                ServiceOrderPriority.NORMAL, new BigDecimal("350.00"), null, null, NOW, NOW.plusSeconds(86400),
-                null, NOW, NOW);
+                List.of(quoteLine), "Revisão preventiva", "Executar revisão completa", "COMPLETED",
+                ServiceOrderPriority.NORMAL, new BigDecimal("350.00"), new BigDecimal("350.00"), null, NOW,
+                NOW.plusSeconds(86400), NOW, delivery, NOW, NOW);
         return new Fixture(tenant, customer, assetType, asset, order);
     }
 

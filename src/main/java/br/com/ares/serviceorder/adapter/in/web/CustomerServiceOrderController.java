@@ -3,6 +3,7 @@ package br.com.ares.serviceorder.adapter.in.web;
 import br.com.ares.serviceorder.application.port.in.ServiceOrderUseCase;
 import br.com.ares.serviceorder.application.port.in.ServiceOrderStatusDirectory;
 import br.com.ares.serviceorder.domain.model.ServiceOrder;
+import br.com.ares.serviceorder.domain.model.ServiceOrderDelivery;
 import br.com.ares.serviceorder.domain.model.ServiceOrderPriority;
 import br.com.ares.tenant.domain.model.QuoteCalculationMethod;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -60,6 +61,7 @@ public class CustomerServiceOrderController {
             Instant openedAt,
             Instant dueAt,
             Instant completedAt,
+            ServiceOrderDelivery delivery,
             Instant createdAt,
             Instant updatedAt
     ) {
@@ -71,7 +73,7 @@ public class CustomerServiceOrderController {
                             line.billableQuantity(), line.total())).toList(),
                     order.title(), order.description(), order.status(), statusName, order.priority(),
                     order.estimatedValue(), order.finalValue(), order.openedAt(), order.dueAt(),
-                    order.completedAt(), order.createdAt(), order.updatedAt());
+                    order.completedAt(), order.delivery(), order.createdAt(), order.updatedAt());
         }
     }
 
