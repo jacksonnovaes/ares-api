@@ -96,15 +96,15 @@ class ServiceOrderDocumentServiceTest {
     }
 
     @Test
-    void simulatesEmailUsingCustomerAddressAndAuditsTheOperation() {
+    void sendsEmailUsingCustomerAddressAndAuditsTheOperation() {
         var actor = new AuthenticatedActor(UUID.randomUUID(), fixture.tenant.id(), "admin@example.com",
                 Set.of("ADMIN"), Set.of("SERVICE_ORDER_UPDATE"), null);
-        when(emailSender.deliveryMode()).thenReturn("SIMULATION");
+        when(emailSender.deliveryMode()).thenReturn("SMTP");
         when(currentActor.requiredActor()).thenReturn(actor);
 
         var result = service.sendEmail(fixture.order.id(), new ServiceOrderDocumentUseCase.SendEmailCommand(null));
 
-        assertThat(result.deliveryMode()).isEqualTo("SIMULATION");
+        assertThat(result.deliveryMode()).isEqualTo("SMTP");
         assertThat(result.recipient()).isEqualTo("cliente@example.com");
         assertThat(result.subject()).contains("Ordem de serviço", "Oficina Ares");
         assertThat(result.body()).contains("Revisão preventiva", "Troca de óleo",
@@ -114,10 +114,11 @@ class ServiceOrderDocumentServiceTest {
 
         var message = ArgumentCaptor.forClass(ServiceOrderEmailSender.EmailMessage.class);
         verify(emailSender).send(message.capture());
+        assertThat(message.getValue().tenantId()).isEqualTo(fixture.tenant.id());
         assertThat(message.getValue().recipient()).isEqualTo("cliente@example.com");
         verify(audit).record(fixture.tenant.id(), actor.userId(), "SERVICE_ORDER_EMAIL_PROCESSED",
                 "SERVICE_ORDER", fixture.order.id().toString(),
-                Map.of("recipient", "cliente@example.com", "deliveryMode", "SIMULATION"));
+                Map.of("recipient", "cliente@example.com", "deliveryMode", "SMTP"));
     }
 
     @Test

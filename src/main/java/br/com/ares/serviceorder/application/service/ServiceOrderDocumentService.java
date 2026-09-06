@@ -114,7 +114,7 @@ public class ServiceOrderDocumentService implements ServiceOrderDocumentUseCase 
         String body = emailBody(document);
         Instant processedAt = clock.instant();
 
-        emailSender.send(new ServiceOrderEmailSender.EmailMessage(recipient, subject, body));
+        emailSender.send(new ServiceOrderEmailSender.EmailMessage(document.company().id(), recipient, subject, body));
         var actor = currentActor.requiredActor();
         audit.record(actor.tenantId(), actor.userId(), "SERVICE_ORDER_EMAIL_PROCESSED", "SERVICE_ORDER",
                 orderId.toString(), Map.of("recipient", recipient, "deliveryMode", emailSender.deliveryMode()));
