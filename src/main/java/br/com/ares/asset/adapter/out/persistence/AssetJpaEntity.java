@@ -1,16 +1,12 @@
 package br.com.ares.asset.adapter.out.persistence;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
 
 import java.time.Instant;
 import java.util.UUID;
 
 @Entity
 @Table(name = "assets")
-@Getter
-@Setter
 public class AssetJpaEntity {
     @Id
     private UUID id;
@@ -36,4 +32,26 @@ public class AssetJpaEntity {
     public AssetJpaEntity() {
     }
 
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
+    public UUID getTenantId() { return tenantId; }
+    public void setTenantId(UUID tenantId) { this.tenantId = tenantId; }
+    public UUID getCustomerId() { return customerId; }
+    public void setCustomerId(UUID customerId) { this.customerId = customerId; }
+    public String getType() { return type; }
+    public void setType(String type) { this.type = type; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    public String getBrand() { return brand; }
+    public void setBrand(String brand) { this.brand = brand; }
+    public String getModel() { return model; }
+    public void setModel(String model) { this.model = model; }
+    public String getSerialNumber() { return serialNumber; }
+    public void setSerialNumber(String serialNumber) { this.serialNumber = serialNumber; }
+    public String getAttributesJson() { return attributesJson; }
+    public void setAttributesJson(String attributesJson) { this.attributesJson = attributesJson; }
+    public Instant getCreatedAt() { return createdAt; }
+    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
+    public Instant getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
 }
