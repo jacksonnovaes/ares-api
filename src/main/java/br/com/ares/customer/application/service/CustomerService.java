@@ -2,6 +2,8 @@ package br.com.ares.customer.application.service;
 
 import br.com.ares.customer.application.port.in.CustomerDirectory;
 import br.com.ares.customer.application.port.in.CustomerUseCase;
+import br.com.ares.customer.application.port.in.command.CreateCustomerCommand;
+import br.com.ares.customer.application.port.in.command.UpdateCustomerCommand;
 import br.com.ares.customer.application.port.out.CustomerRepository;
 import br.com.ares.customer.domain.model.Customer;
 import br.com.ares.customer.domain.model.CustomerStatus;

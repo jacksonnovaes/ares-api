@@ -6,6 +6,7 @@ import br.com.ares.customer.application.port.in.CustomerUseCase;
 import br.com.ares.serviceorder.application.port.in.ServiceOrderDocumentUseCase;
 import br.com.ares.serviceorder.application.port.in.ServiceOrderUseCase;
 import br.com.ares.serviceorder.application.port.out.ServiceOrderEmailSender;
+import br.com.ares.serviceorder.application.port.out.ServiceOrderPdfGenerator;
 import br.com.ares.serviceorder.domain.model.ServiceOrder;
 import br.com.ares.serviceorder.domain.model.ServiceOrderPriority;
 import br.com.ares.serviceorder.application.port.in.ServiceOrderStatusDirectory;
@@ -42,6 +43,7 @@ public class ServiceOrderDocumentService implements ServiceOrderDocumentUseCase 
     private final ServiceOrderStatusDirectory statuses;
     private final TenantManagementUseCase tenants;
     private final ServiceOrderEmailSender emailSender;
+    private final ServiceOrderPdfGenerator pdfGenerator;
     private final CurrentActorProvider currentActor;
     private final AuditLogPort audit;
     private final Clock clock;
@@ -54,6 +56,7 @@ public class ServiceOrderDocumentService implements ServiceOrderDocumentUseCase 
             ServiceOrderStatusDirectory statuses,
             TenantManagementUseCase tenants,
             ServiceOrderEmailSender emailSender,
+            ServiceOrderPdfGenerator pdfGenerator,
             CurrentActorProvider currentActor,
             AuditLogPort audit,
             Clock clock
@@ -65,6 +68,7 @@ public class ServiceOrderDocumentService implements ServiceOrderDocumentUseCase 
         this.statuses = statuses;
         this.tenants = tenants;
         this.emailSender = emailSender;
+        this.pdfGenerator = pdfGenerator;
         this.currentActor = currentActor;
         this.audit = audit;
         this.clock = clock;
@@ -112,9 +116,12 @@ public class ServiceOrderDocumentService implements ServiceOrderDocumentUseCase 
         String recipient = normalizeRecipient(requestedRecipient, document.customer().email());
         String subject = "Ordem de serviço #" + shortId(orderId) + " — " + document.company().tradeName();
         String body = emailBody(document);
+        String attachmentFilename = "ordem-de-servico-" + shortId(orderId).toLowerCase(PT_BR) + ".pdf";
+        byte[] attachmentContent = pdfGenerator.generate(document);
         Instant processedAt = clock.instant();
 
-        emailSender.send(new ServiceOrderEmailSender.EmailMessage(document.company().id(), recipient, subject, body));
+        emailSender.send(new ServiceOrderEmailSender.EmailMessage(document.company().id(), recipient, subject, body,
+                attachmentFilename, "application/pdf", attachmentContent));
         var actor = currentActor.requiredActor();
         audit.record(actor.tenantId(), actor.userId(), "SERVICE_ORDER_EMAIL_PROCESSED", "SERVICE_ORDER",
                 orderId.toString(), Map.of("recipient", recipient, "deliveryMode", emailSender.deliveryMode()));

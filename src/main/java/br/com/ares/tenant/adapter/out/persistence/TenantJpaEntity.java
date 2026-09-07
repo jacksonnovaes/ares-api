@@ -18,27 +18,45 @@ import java.util.UUID;
 @Entity
 @Table(name = "tenants")
 class TenantJpaEntity {
-    @Id UUID id;
-    @Column(name = "legal_name", nullable = false) String legalName;
-    @Column(name = "trade_name", nullable = false) String tradeName;
-    @Column(nullable = false) String slug;
-    @Column(nullable = false) String document;
-    @Enumerated(EnumType.STRING) @Column(nullable = false) TenantStatus status;
-    @Column(name = "logo_url") String logoUrl;
-    @Column(name = "primary_color") String primaryColor;
-    @Column(name = "secondary_color", nullable = false, length = 7) String secondaryColor;
-    @Column(name = "border_radius", nullable = false) int borderRadius;
-    @Column(name = "require_assets", nullable = false) boolean requireAssets;
-    @Enumerated(EnumType.STRING) @Column(name = "subscription_plan", nullable = false) SubscriptionPlan subscriptionPlan;
+    @Id
+    UUID id;
+    @Column(name = "legal_name", nullable = false)
+    String legalName;
+    @Column(name = "trade_name", nullable = false)
+    String tradeName;
+    @Column(nullable = false)
+    String slug;
+    @Column(nullable = false)
+    String document;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    TenantStatus status;
+    @Column(name = "logo_url")
+    String logoUrl;
+    @Column(name = "primary_color")
+    String primaryColor;
+    @Column(name = "secondary_color", nullable = false, length = 7)
+    String secondaryColor;
+    @Column(name = "border_radius", nullable = false)
+    int borderRadius;
+    @Column(name = "require_assets", nullable = false)
+    boolean requireAssets;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "subscription_plan", nullable = false)
+    SubscriptionPlan subscriptionPlan;
     @Enumerated(EnumType.STRING)
     @Column(name = "subscription_billing_cycle", nullable = false, length = 20)
     SubscriptionBillingCycle subscriptionBillingCycle;
-    @Column(name = "additional_user_seats", nullable = false) int additionalUserSeats;
-    @Column(name = "subscription_active", nullable = false) boolean subscriptionActive;
-    @Column(name = "subscription_paid_until") Instant subscriptionPaidUntil;
+    @Column(name = "additional_user_seats", nullable = false)
+    int additionalUserSeats;
+    @Column(name = "subscription_active", nullable = false)
+    boolean subscriptionActive;
+    @Column(name = "subscription_paid_until")
+    Instant subscriptionPaidUntil;
     @Column(name = "subscription_price", nullable = false, precision = 15, scale = 2)
     BigDecimal subscriptionPrice;
-    @Column(name = "coupon_code", length = 40) String couponCode;
+    @Column(name = "coupon_code", length = 40)
+    String couponCode;
     @Column(name = "coupon_discount_percentage", nullable = false, precision = 5, scale = 2)
     BigDecimal couponDiscountPercentage;
     @Enumerated(EnumType.STRING)
@@ -92,8 +110,10 @@ class TenantJpaEntity {
     boolean publicShowLogo;
     @Column(name = "public_background_overlay_percentage", nullable = false)
     int publicBackgroundOverlayPercentage;
-    @Column(name = "created_at", nullable = false) Instant createdAt;
-    @Column(name = "updated_at", nullable = false) Instant updatedAt;
+    @Column(name = "created_at", nullable = false)
+    Instant createdAt;
+    @Column(name = "updated_at", nullable = false)
+    Instant updatedAt;
 
     protected TenantJpaEntity() {
     }

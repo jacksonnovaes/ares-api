@@ -2,6 +2,7 @@ package br.com.ares.customer.application.service;
 
 import br.com.ares.customer.application.port.in.CustomerRegistrationUseCase;
 import br.com.ares.customer.application.port.in.CustomerUseCase;
+import br.com.ares.customer.application.port.in.command.CreateCustomerCommand;
 import br.com.ares.customer.domain.model.Customer;
 import br.com.ares.identity.application.port.in.UserManagementUseCase;
 import br.com.ares.identity.domain.model.Role;
@@ -41,7 +42,7 @@ public class CustomerRegistrationService implements CustomerRegistrationUseCase 
             }
         }
 
-        Customer customer = customers.create(new CustomerUseCase.CreateCustomerCommand(
+        Customer customer = customers.create(new CreateCustomerCommand(
                 command.type(), command.name(), command.document(), command.email(), command.phone(), command.address(),
                 command.notes()));
 
