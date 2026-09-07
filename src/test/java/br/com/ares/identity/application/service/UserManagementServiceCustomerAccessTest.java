@@ -7,11 +7,14 @@ import br.com.ares.identity.application.port.out.RefreshSessionRepository;
 import br.com.ares.identity.application.port.out.UserRepository;
 import br.com.ares.identity.domain.model.Permission;
 import br.com.ares.identity.domain.model.Role;
+import br.com.ares.identity.domain.model.User;
+import br.com.ares.identity.domain.model.UserStatus;
 import br.com.ares.identity.domain.service.PasswordPolicy;
 import br.com.ares.shared.application.AuditLogPort;
 import br.com.ares.shared.application.AuthenticatedActor;
 import br.com.ares.shared.application.CurrentActorProvider;
 import br.com.ares.shared.domain.BusinessException;
+import br.com.ares.tenant.application.port.in.TenantSettingsDirectory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,6 +25,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.Set;
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -37,6 +41,7 @@ class UserManagementServiceCustomerAccessTest {
     @Mock PasswordHasher passwordHasher;
     @Mock PasswordPolicy passwordPolicy;
     @Mock CustomerDirectory customers;
+    @Mock TenantSettingsDirectory tenantSettings;
     @Mock CurrentActorProvider currentActor;
     @Mock AuditLogPort audit;
 
@@ -49,7 +54,8 @@ class UserManagementServiceCustomerAccessTest {
         tenantId = UUID.randomUUID();
         customerId = UUID.randomUUID();
         service = new UserManagementService(users, sessions, passwordHasher, passwordPolicy, customers,
-                currentActor, audit, Clock.fixed(Instant.parse("2026-08-24T12:00:00Z"), ZoneOffset.UTC));
+                tenantSettings, currentActor, audit,
+                Clock.fixed(Instant.parse("2026-08-24T12:00:00Z"), ZoneOffset.UTC));
     }
 
     @Test
@@ -81,6 +87,23 @@ class UserManagementServiceCustomerAccessTest {
         assertThatThrownBy(() -> service.create(command(Set.of(Role.CUSTOMER), Set.of(Permission.ASSET_READ))))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("permissões adicionais");
+    }
+
+    @Test
+    void rejectsStaffUserWhenThePlanSeatLimitWasReached() {
+        var actor = new AuthenticatedActor(UUID.randomUUID(), tenantId, "admin@example.com",
+                Set.of("ADMIN"), Set.of("USER_MANAGE"), null);
+        when(currentActor.requiredActor()).thenReturn(actor);
+        when(tenantSettings.subscriptionUserLimit(tenantId)).thenReturn(1);
+        when(users.findAllByTenantId(tenantId)).thenReturn(List.of(new User(actor.userId(), tenantId, null,
+                "Administrador", "admin@example.com", "hash", null, "Administrador", UserStatus.ACTIVE,
+                Set.of(Role.ADMIN), Set.of(Permission.USER_MANAGE), null,
+                Instant.parse("2026-08-24T12:00:00Z"), Instant.parse("2026-08-24T12:00:00Z"),
+                Instant.parse("2026-08-24T12:00:00Z"))));
+
+        assertThatThrownBy(() -> service.create(command(Set.of(Role.TECHNICIAN), Set.of())))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("limite de 1 usuário");
     }
 
     private void prepareValidCustomer() {

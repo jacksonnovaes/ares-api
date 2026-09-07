@@ -3,6 +3,7 @@ package br.com.ares.tenant.application.port.in;
 import br.com.ares.tenant.domain.model.Tenant;
 import br.com.ares.tenant.domain.model.TenantStatus;
 import br.com.ares.tenant.domain.model.SubscriptionPlan;
+import br.com.ares.tenant.domain.model.SubscriptionBillingCycle;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -21,8 +22,9 @@ public interface TenantManagementUseCase {
 
     record CreateTenantCommand(String legalName, String tradeName, String slug, String document,
                                String logoUrl, String primaryColor, SubscriptionPlan subscriptionPlan,
+                               SubscriptionBillingCycle subscriptionBillingCycle, int additionalUserSeats,
                                boolean subscriptionActive, Instant subscriptionPaidUntil,
-                               BigDecimal subscriptionMonthlyPrice, String couponCode,
+                               BigDecimal subscriptionPrice, String couponCode,
                                BigDecimal couponDiscountPercentage) {
     }
 }

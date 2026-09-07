@@ -10,6 +10,7 @@ import br.com.ares.identity.domain.service.PasswordPolicy;
 import br.com.ares.shared.application.AuditLogPort;
 import br.com.ares.shared.application.CurrentActorProvider;
 import br.com.ares.shared.domain.BusinessException;
+import br.com.ares.tenant.application.port.in.TenantSettingsDirectory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,19 +26,21 @@ public class UserManagementService implements UserManagementUseCase {
     private final PasswordHasher passwordHasher;
     private final PasswordPolicy passwordPolicy;
     private final CustomerDirectory customers;
+    private final TenantSettingsDirectory tenantSettings;
     private final CurrentActorProvider currentActor;
     private final AuditLogPort audit;
     private final Clock clock;
 
     public UserManagementService(UserRepository users, RefreshSessionRepository sessions,
                                  PasswordHasher passwordHasher, PasswordPolicy passwordPolicy,
-                                 CustomerDirectory customers,
+                                 CustomerDirectory customers, TenantSettingsDirectory tenantSettings,
                                  CurrentActorProvider currentActor, AuditLogPort audit, Clock clock) {
         this.users = users;
         this.sessions = sessions;
         this.passwordHasher = passwordHasher;
         this.passwordPolicy = passwordPolicy;
         this.customers = customers;
+        this.tenantSettings = tenantSettings;
         this.currentActor = currentActor;
         this.audit = audit;
         this.clock = clock;
@@ -77,6 +80,9 @@ public class UserManagementService implements UserManagementUseCase {
             throw BusinessException.badRequest("customer_read_only",
                     "O acesso do cliente não pode receber permissões adicionais.");
         }
+        if (!command.roles().contains(Role.CUSTOMER)) {
+            requireAvailableStaffSeat(actor.tenantId(), null);
+        }
         EnumSet<Permission> permissions = EnumSet.noneOf(Permission.class);
         permissions.addAll(RolePermissions.defaultsFor(command.roles()));
         if (command.extraPermissions() != null) permissions.addAll(command.extraPermissions());
@@ -107,6 +113,10 @@ public class UserManagementService implements UserManagementUseCase {
         }
         User user = users.findByIdAndTenantId(id, actor.tenantId()).orElseThrow(() ->
                 BusinessException.notFound("user_not_found", "Usuário não encontrado."));
+        if (user.status() == UserStatus.INACTIVE && status != UserStatus.INACTIVE
+                && !user.roles().contains(Role.CUSTOMER)) {
+            requireAvailableStaffSeat(actor.tenantId(), user.id());
+        }
         user = users.save(user.withStatus(status, clock.instant()));
         if (status != UserStatus.ACTIVE) sessions.revokeAllByUserId(user.id(), clock.instant());
         audit.record(actor.tenantId(), actor.userId(), "USER_STATUS_CHANGED", "USER", user.id().toString(),
@@ -117,5 +127,19 @@ public class UserManagementService implements UserManagementUseCase {
     private UserView view(User user) {
         return new UserView(user.id(), user.name(), user.email(), user.phone(), user.jobTitle(), user.status(),
                 user.roles(), user.permissions(), user.customerId());
+    }
+
+    private void requireAvailableStaffSeat(UUID tenantId, UUID excludedUserId) {
+        int limit = tenantSettings.subscriptionUserLimit(tenantId);
+        long occupiedSeats = users.findAllByTenantId(tenantId).stream()
+                .filter(user -> excludedUserId == null || !excludedUserId.equals(user.id()))
+                .filter(user -> !user.roles().contains(Role.CUSTOMER))
+                .filter(user -> user.status() != UserStatus.INACTIVE)
+                .count();
+        if (occupiedSeats >= limit) {
+            throw BusinessException.conflict("subscription_user_limit_reached",
+                    "O limite de " + limit + " usuário(s) do plano foi atingido. "
+                            + "Contrate usuários adicionais ou altere o plano.");
+        }
     }
 }

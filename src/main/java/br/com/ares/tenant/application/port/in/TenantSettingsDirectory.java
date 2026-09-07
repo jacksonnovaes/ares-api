@@ -4,4 +4,6 @@ import java.util.UUID;
 
 public interface TenantSettingsDirectory {
     boolean requireAssets(UUID tenantId);
+
+    int subscriptionUserLimit(UUID tenantId);
 }

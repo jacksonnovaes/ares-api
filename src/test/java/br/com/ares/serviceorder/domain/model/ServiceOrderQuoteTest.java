@@ -72,9 +72,29 @@ class ServiceOrderQuoteTest {
         assertThat(line.total()).isEqualByComparingTo("1000.00");
     }
 
+    @Test
+    void recordsDeliveryAndWarrantyWhenOrderIsCompleted() {
+        ServiceOrder order = order();
+        Instant completedAt = NOW.plusSeconds(3600);
+        var delivery = new ServiceOrderDelivery(completedAt, "Maria da Silva", 90,
+                completedAt.plusSeconds(90L * 86400), "Garantia dos serviços executados.", "Entregue testado.");
+
+        ServiceOrder completed = order.changeStatus("COMPLETED", null, delivery, completedAt);
+
+        assertThat(completed.status()).isEqualTo("COMPLETED");
+        assertThat(completed.completedAt()).isEqualTo(completedAt);
+        assertThat(completed.finalValue()).isEqualByComparingTo(order.estimatedValue());
+        assertThat(completed.delivery()).isEqualTo(delivery);
+
+        ServiceOrder reopened = completed.changeStatus("IN_PROGRESS", null, null,
+                completedAt.plusSeconds(60));
+        assertThat(reopened.completedAt()).isNull();
+        assertThat(reopened.delivery()).isNull();
+    }
+
     private ServiceOrder order() {
         return new ServiceOrder(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
                 Set.of(), List.of(), "Reparo", null, "OPEN", ServiceOrderPriority.NORMAL,
-                BigDecimal.ZERO, null, null, NOW, null, null, NOW, NOW);
+                BigDecimal.ZERO, null, null, NOW, null, null, null, NOW, NOW);
     }
 }

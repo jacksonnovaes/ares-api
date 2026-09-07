@@ -26,7 +26,8 @@ public class ServiceOrderStatusService implements ServiceOrderStatusUseCase, Ser
             new DefaultStatus("OPEN", "Aberto", 10),
             new DefaultStatus("ANALYSIS", "Em análise", 20),
             new DefaultStatus("EXECUTION", "Execução", 30),
-            new DefaultStatus("BLOCKED", "Bloqueada", 40)
+            new DefaultStatus("BLOCKED", "Bloqueada", 40),
+            new DefaultStatus("COMPLETED", "Concluída", 90)
     );
 
     private final ServiceOrderStatusRepository repository;

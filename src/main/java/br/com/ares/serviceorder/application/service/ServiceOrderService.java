@@ -14,6 +14,7 @@ import br.com.ares.tenant.application.port.in.TenantSettingsDirectory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.*;
+import java.time.temporal.ChronoUnit;
 import java.math.BigDecimal;
 import java.util.*;
 
@@ -47,7 +48,7 @@ public class ServiceOrderService implements ServiceOrderUseCase {
             throw BusinessException.badRequest("invalid_technician","Técnico inválido para este tenant.");
         Instant now=clock.instant();var order=new ServiceOrder(UUID.randomUUID(),tenant,c.customerId(),c.assetId(),
                 serviceIds,quoteLines,c.title().trim(),c.description(),"OPEN",c.priority(),
-                quoteTotal(quoteLines),null,c.assignedTechnicianId(),now,c.dueAt(),null,now,now);
+                quoteTotal(quoteLines),null,c.assignedTechnicianId(),now,c.dueAt(),null,null,now,now);
         order=repository.save(order);audit.record(tenant,actor.userId(),"SERVICE_ORDER_CREATED","SERVICE_ORDER",
                 order.id().toString(),Map.of("customerId",c.customerId()));return order;}
 
@@ -68,9 +69,13 @@ public class ServiceOrderService implements ServiceOrderUseCase {
         rejectCustomerWrite(actor);
         ServiceOrder order=required(id,actor.tenantId());enforceScope(order,actor);
         String status=statuses.requiredActive(actor.tenantId(),c.status()).code();
-        order=repository.save(order.changeStatus(status,c.finalValue(),clock.instant()));
+        Instant now=clock.instant();
+        ServiceOrderDelivery delivery="COMPLETED".equals(status)?completion(c,now):null;
+        order=repository.save(order.changeStatus(status,c.finalValue(),delivery,now));
         audit.record(actor.tenantId(),actor.userId(),"SERVICE_ORDER_STATUS_CHANGED","SERVICE_ORDER",
-                order.id().toString(),Map.of("status",order.status()));return order;}
+                order.id().toString(),delivery==null?Map.of("status",order.status()):Map.of(
+                        "status",order.status(),"warrantyDays",delivery.warrantyDays(),
+                        "deliveryReceivedBy",delivery.receivedBy()));return order;}
 
     @Override @Transactional
     public ServiceOrder updateQuote(UUID id,UpdateQuoteCommand c){var actor=currentActor.requiredActor();
@@ -104,7 +109,7 @@ public class ServiceOrderService implements ServiceOrderUseCase {
                 "quote_lines_required","Adicione pelo menos uma linha ao orçamento.");
         if(commands.size()>100)throw BusinessException.badRequest(
                 "quote_lines_limit","O orçamento pode conter no máximo 100 linhas.");
-        return commands.stream().map(line->new ServiceOrderLine(line.serviceId(),line.description(),
+        return commands.stream().map(line->new ServiceOrderLine(line.serviceId(),line.description(),line.notes(),
                 line.quantity(),line.unit(),line.unitPrice(),line.calculationMethod(),
                 line.widthMeters(),line.lengthMeters(),line.heightMeters())).toList();}
     private void validateAsset(UUID tenantId,UUID customerId,UUID assetId,boolean required){
@@ -115,4 +120,31 @@ public class ServiceOrderService implements ServiceOrderUseCase {
     }
     private BigDecimal quoteTotal(List<ServiceOrderLine> lines){return lines.stream().map(ServiceOrderLine::total)
             .reduce(BigDecimal.ZERO,BigDecimal::add);}
+
+    private ServiceOrderDelivery completion(ChangeStatusCommand command,Instant now){
+        String receivedBy=requiredText(command.deliveryReceivedBy(),160,"service_order_delivery_recipient_required",
+                "Informe quem recebeu a entrega.");
+        int warrantyDays=command.warrantyDays()==null?0:command.warrantyDays();
+        if(warrantyDays<0||warrantyDays>3650)throw BusinessException.badRequest(
+                "service_order_warranty_days_invalid","A garantia deve ficar entre 0 e 3650 dias.");
+        String warrantyTerms=optionalText(command.warrantyTerms(),2000,"service_order_warranty_terms_too_long",
+                "As condições da garantia devem ter no máximo 2000 caracteres.");
+        String deliveryNotes=optionalText(command.deliveryNotes(),2000,"service_order_delivery_notes_too_long",
+                "As observações da entrega devem ter no máximo 2000 caracteres.");
+        Instant warrantyUntil=warrantyDays==0?null:now.plus(warrantyDays,ChronoUnit.DAYS);
+        return new ServiceOrderDelivery(now,receivedBy,warrantyDays,warrantyUntil,warrantyTerms,deliveryNotes);
+    }
+
+    private String requiredText(String value,int max,String code,String message){
+        String normalized=value==null?"":value.trim();
+        if(normalized.isBlank()||normalized.length()>max)throw BusinessException.badRequest(code,message);
+        return normalized;
+    }
+
+    private String optionalText(String value,int max,String code,String message){
+        if(value==null||value.isBlank())return null;
+        String normalized=value.trim();
+        if(normalized.length()>max)throw BusinessException.badRequest(code,message);
+        return normalized;
+    }
 }

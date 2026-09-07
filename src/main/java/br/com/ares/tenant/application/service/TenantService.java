@@ -19,9 +19,11 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -58,9 +60,15 @@ public class TenantService implements TenantManagementUseCase, CompanySettingsUs
         Instant now = clock.instant();
         var tenant = new Tenant(UUID.randomUUID(), command.legalName().trim(), command.tradeName().trim(),
                 slug, onlyDigits(command.document()), TenantStatus.ACTIVE, command.logoUrl(),
-                command.primaryColor(), true, command.subscriptionPlan(), command.subscriptionActive(),
-                command.subscriptionPaidUntil(), command.subscriptionMonthlyPrice(), command.couponCode(),
-                command.couponDiscountPercentage(), QuoteCalculationMethod.QUANTITY, null, null, now, now);
+                command.primaryColor(), "#16A085", 12, true, command.subscriptionPlan(),
+                command.subscriptionBillingCycle(),
+                command.additionalUserSeats(), command.subscriptionActive(), command.subscriptionPaidUntil(),
+                command.subscriptionPrice(), command.couponCode(),
+                command.couponDiscountPercentage(), QuoteCalculationMethod.QUANTITY,
+                EnumSet.allOf(QuoteCalculationMethod.class), null, null, false, null, null, null, null,
+                null, null, false, br.com.ares.tenant.domain.model.PublicServiceSource.CATALOG, java.util.List.of(),
+                command.primaryColor() == null ? "#2457E6" : command.primaryColor(), "#F6F4ED", "#142019",
+                null, null, null, true, 18, now, now);
         tenant = repository.save(tenant);
         assetTypes.provisionDefaults(tenant.id());
         orderStatuses.provisionDefaults(tenant.id());
@@ -85,12 +93,21 @@ public class TenantService implements TenantManagementUseCase, CompanySettingsUs
     public Tenant changeStatus(UUID id, TenantStatus status) {
         Tenant current = requiredById(id);
         return repository.save(new Tenant(current.id(), current.legalName(), current.tradeName(), current.slug(),
-                current.document(), status, current.logoUrl(), current.primaryColor(),
-                current.requireAssets(), current.subscriptionPlan(), current.subscriptionActive(),
-                current.subscriptionPaidUntil(), current.subscriptionMonthlyPrice(), current.couponCode(),
+                current.document(), status, current.logoUrl(), current.primaryColor(), current.secondaryColor(),
+                current.borderRadius(),
+                current.requireAssets(), current.subscriptionPlan(), current.subscriptionBillingCycle(),
+                current.additionalUserSeats(), current.subscriptionActive(), current.subscriptionPaidUntil(),
+                current.subscriptionPrice(), current.couponCode(),
                 current.couponDiscountPercentage(), current.quoteCalculationMethod(),
-                current.defaultSquareMeterPrice(), current.defaultCubicMeterPrice(), current.createdAt(),
-                clock.instant()));
+                current.enabledQuoteCalculationMethods(),
+                current.defaultSquareMeterPrice(), current.defaultCubicMeterPrice(), current.publicPageEnabled(),
+                current.publicHeadline(), current.publicDescription(), current.publicWhatsapp(),
+                current.publicEmail(), current.publicCity(), current.publicServiceArea(), current.publicShowPrices(),
+                current.publicServiceSource(), current.publicManualServices(), current.publicAccentColor(),
+                current.publicBackgroundColor(), current.publicTextColor(), current.publicProfileImagePath(),
+                current.publicLogoPath(), current.publicBackgroundImagePath(), current.publicShowLogo(),
+                current.publicBackgroundOverlayPercentage(),
+                current.createdAt(), clock.instant()));
     }
 
     @Override
@@ -109,21 +126,35 @@ public class TenantService implements TenantManagementUseCase, CompanySettingsUs
                 : command.defaultSquareMeterPrice().setScale(2, RoundingMode.HALF_UP);
         BigDecimal cubicMeterPrice = command.defaultCubicMeterPrice() == null ? null
                 : command.defaultCubicMeterPrice().setScale(2, RoundingMode.HALF_UP);
-        if (command.quoteCalculationMethod() == QuoteCalculationMethod.SQUARE_METER
+        Set<QuoteCalculationMethod> requestedMethods = command.enabledQuoteCalculationMethods() == null
+                ? Set.of() : command.enabledQuoteCalculationMethods();
+        if (requestedMethods.isEmpty()) {
+            throw BusinessException.badRequest("quote_calculation_method_required",
+                    "Selecione ao menos um método de cálculo para os orçamentos.");
+        }
+        Set<QuoteCalculationMethod> enabledMethods = EnumSet.copyOf(requestedMethods);
+        if (!enabledMethods.contains(command.quoteCalculationMethod())) {
+            throw BusinessException.badRequest("default_quote_calculation_method_disabled",
+                    "O cálculo padrão precisa estar entre os métodos selecionados.");
+        }
+        if (enabledMethods.contains(QuoteCalculationMethod.SQUARE_METER)
                 && (squareMeterPrice == null || squareMeterPrice.signum() <= 0)) {
             throw BusinessException.badRequest("square_meter_price_required",
                     "Informe um valor por metro quadrado maior que zero.");
         }
-        if (command.quoteCalculationMethod() == QuoteCalculationMethod.CUBIC_METER
+        if (enabledMethods.contains(QuoteCalculationMethod.CUBIC_METER)
                 && (cubicMeterPrice == null || cubicMeterPrice.signum() <= 0)) {
             throw BusinessException.badRequest("cubic_meter_price_required",
                     "Informe um valor por metro cúbico maior que zero.");
         }
         Tenant updated = repository.save(tenant.withCompanySettings(command.requireAssets(),
-                command.quoteCalculationMethod(), squareMeterPrice, cubicMeterPrice, clock.instant()));
+                command.quoteCalculationMethod(), enabledMethods, squareMeterPrice, cubicMeterPrice,
+                clock.instant()));
         var details = new LinkedHashMap<String, Object>();
         details.put("requireAssets", updated.requireAssets());
         details.put("quoteCalculationMethod", updated.quoteCalculationMethod().name());
+        details.put("enabledQuoteCalculationMethods", updated.enabledQuoteCalculationMethods().stream()
+                .map(Enum::name).sorted().toList());
         if (updated.defaultSquareMeterPrice() != null) {
             details.put("defaultSquareMeterPrice", updated.defaultSquareMeterPrice());
         }
@@ -141,11 +172,21 @@ public class TenantService implements TenantManagementUseCase, CompanySettingsUs
         return requiredById(tenantId).requireAssets();
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public int subscriptionUserLimit(UUID tenantId) {
+        return requiredById(tenantId).subscriptionUserLimit();
+    }
+
     private CompanySettings toSettings(Tenant tenant) {
-        return new CompanySettings(tenant.requireAssets(), tenant.subscriptionPlan(), tenant.subscriptionActive(),
-                tenant.subscriptionPaidUntil(), tenant.subscriptionMonthlyPrice(), tenant.couponCode(),
+        return new CompanySettings(tenant.requireAssets(), tenant.subscriptionPlan(),
+                tenant.subscriptionBillingCycle(), tenant.subscriptionActive(), tenant.subscriptionPaidUntil(),
+                tenant.subscriptionPrice(), tenant.couponCode(),
                 tenant.couponDiscountPercentage(), tenant.quoteCalculationMethod(),
-                tenant.defaultSquareMeterPrice(), tenant.defaultCubicMeterPrice());
+                tenant.enabledQuoteCalculationMethods(),
+                tenant.defaultSquareMeterPrice(), tenant.defaultCubicMeterPrice(),
+                tenant.subscriptionPlan().includedUsers(), tenant.additionalUserSeats(),
+                tenant.subscriptionUserLimit(), SubscriptionPricingService.ADDITIONAL_USER_MONTHLY_PRICE);
     }
 
     private String normalizeSlug(String value) {

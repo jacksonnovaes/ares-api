@@ -15,6 +15,8 @@ class ServiceOrderLineJpaEmbeddable {
     UUID serviceId;
     @Column(nullable = false, length = 500)
     String description;
+    @Column(length = 1000)
+    String notes;
     @Column(nullable = false, precision = 12, scale = 3)
     BigDecimal quantity;
     @Column(nullable = false, length = 20)

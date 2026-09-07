@@ -2,6 +2,8 @@ package br.com.ares.customer.application.service;
 
 import br.com.ares.customer.application.port.in.CustomerDirectory;
 import br.com.ares.customer.application.port.in.CustomerUseCase;
+import br.com.ares.customer.application.port.in.command.CreateCustomerCommand;
+import br.com.ares.customer.application.port.in.command.UpdateCustomerCommand;
 import br.com.ares.customer.application.port.out.CustomerRepository;
 import br.com.ares.customer.domain.model.Customer;
 import br.com.ares.customer.domain.model.CustomerStatus;
@@ -37,6 +39,7 @@ public class CustomerService implements CustomerUseCase, CustomerDirectory {
     @Transactional
     public Customer create(CreateCustomerCommand command) {
         var actor = currentActor.requiredActor();
+        String address = requiredAddress(command.address());
         String document = normalizeDocument(command.document());
         if (!document.isBlank() && repository.existsByTenantIdAndDocument(actor.tenantId(), document)) {
             throw BusinessException.conflict("customer_document_exists",
@@ -44,7 +47,7 @@ public class CustomerService implements CustomerUseCase, CustomerDirectory {
         }
         Instant now = clock.instant();
         var customer = new Customer(UUID.randomUUID(), actor.tenantId(), command.type(), command.name().trim(),
-                document, normalizeNullable(command.email()), command.phone(), command.notes(),
+                document, normalizeNullable(command.email()), command.phone(), address, command.notes(),
                 CustomerStatus.ACTIVE, now, now);
         customer = repository.save(customer);
         audit.record(actor.tenantId(), actor.userId(), "CUSTOMER_CREATED", "CUSTOMER",
@@ -77,8 +80,9 @@ public class CustomerService implements CustomerUseCase, CustomerDirectory {
     public Customer update(UUID id, UpdateCustomerCommand command) {
         var actor = currentActor.requiredActor();
         Customer current = required(id, actor.tenantId());
+        String address = requiredAddress(command.address());
         Customer updated = new Customer(current.id(), current.tenantId(), current.type(), command.name().trim(),
-                current.document(), normalizeNullable(command.email()), command.phone(), command.notes(),
+                current.document(), normalizeNullable(command.email()), command.phone(), address, command.notes(),
                 current.status(), current.createdAt(), clock.instant());
         updated = repository.save(updated);
         audit.record(actor.tenantId(), actor.userId(), "CUSTOMER_UPDATED", "CUSTOMER",
@@ -103,5 +107,13 @@ public class CustomerService implements CustomerUseCase, CustomerDirectory {
 
     private String normalizeNullable(String value) {
         return value == null ? null : value.trim().toLowerCase();
+    }
+
+    private String requiredAddress(String value) {
+        if (value == null || value.isBlank()) {
+            throw BusinessException.badRequest("customer_address_required",
+                    "Informe o endereço do cliente.");
+        }
+        return value.trim();
     }
 }

@@ -159,7 +159,7 @@ public class AuthService implements AuthUseCase {
             Instant now = clock.instant();
             passwordResets.save(new PasswordReset(UUID.randomUUID(), user.id(), user.tenantId(),
                     tokens.hash(rawToken), now.plus(passwordResetTtl), null, now));
-            notifier.send(user.email(), user.name(), rawToken);
+            notifier.send(user.tenantId(), tenant.tradeName(), user.email(), user.name(), rawToken);
         });
     }
 

@@ -1,5 +1,6 @@
 package br.com.ares.customer.adapter.out.persistence;
 
+import br.com.ares.customer.adapter.out.mapper.CustomerPersistenceMapper;
 import br.com.ares.customer.application.port.out.CustomerRepository;
 import br.com.ares.customer.domain.model.Customer;
 import org.springframework.stereotype.Component;
@@ -7,6 +8,9 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import static br.com.ares.customer.adapter.out.mapper.CustomerPersistenceMapper.toDomain;
+import static br.com.ares.customer.adapter.out.mapper.CustomerPersistenceMapper.toEntity;
 
 @Component
 class CustomerPersistenceAdapter implements CustomerRepository {
@@ -23,12 +27,12 @@ class CustomerPersistenceAdapter implements CustomerRepository {
 
     @Override
     public Optional<Customer> findByIdAndTenantId(UUID id, UUID tenantId) {
-        return repository.findByIdAndTenantId(id, tenantId).map(this::toDomain);
+        return repository.findByIdAndTenantId(id, tenantId).map(CustomerPersistenceMapper::toDomain);
     }
 
     @Override
     public List<Customer> findAllByTenantId(UUID tenantId) {
-        return repository.findAllByTenantIdOrderByNameAsc(tenantId).stream().map(this::toDomain).toList();
+        return repository.findAllByTenantIdOrderByNameAsc(tenantId).stream().map(CustomerPersistenceMapper::toDomain).toList();
     }
 
     @Override
@@ -39,26 +43,5 @@ class CustomerPersistenceAdapter implements CustomerRepository {
     @Override
     public boolean existsByTenantIdAndDocument(UUID tenantId, String document) {
         return repository.existsByTenantIdAndDocument(tenantId, document);
-    }
-
-    private CustomerJpaEntity toEntity(Customer value) {
-        var entity = new CustomerJpaEntity();
-        entity.id = value.id();
-        entity.tenantId = value.tenantId();
-        entity.type = value.type();
-        entity.name = value.name();
-        entity.document = value.document();
-        entity.email = value.email();
-        entity.phone = value.phone();
-        entity.notes = value.notes();
-        entity.status = value.status();
-        entity.createdAt = value.createdAt();
-        entity.updatedAt = value.updatedAt();
-        return entity;
-    }
-
-    private Customer toDomain(CustomerJpaEntity value) {
-        return new Customer(value.id, value.tenantId, value.type, value.name, value.document, value.email,
-                value.phone, value.notes, value.status, value.createdAt, value.updatedAt);
     }
 }

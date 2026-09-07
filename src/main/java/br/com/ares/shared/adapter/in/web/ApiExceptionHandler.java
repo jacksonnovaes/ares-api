@@ -9,6 +9,7 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -55,6 +56,14 @@ public class ApiExceptionHandler {
         var problem = problem(HttpStatus.CONFLICT, "data_conflict",
                 "A operação viola uma regra de unicidade ou integridade.", request);
         return ResponseEntity.status(HttpStatus.CONFLICT).body(problem);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    ResponseEntity<ProblemDetail> handleUploadSize(MaxUploadSizeExceededException exception,
+                                                   HttpServletRequest request) {
+        var problem = problem(HttpStatus.PAYLOAD_TOO_LARGE, "upload_too_large",
+                "A imagem excede o limite de 5 MB.", request);
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(problem);
     }
 
     @ExceptionHandler(AccessDeniedException.class)

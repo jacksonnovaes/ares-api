@@ -1,5 +1,6 @@
 package br.com.ares.asset.application.port.in;
 
+import br.com.ares.asset.application.port.in.command.CreateAssetCommand;
 import br.com.ares.asset.domain.model.Asset;
 
 import java.util.List;
@@ -13,7 +14,5 @@ public interface AssetUseCase {
 
     List<Asset> list(UUID customerId);
 
-    record CreateAssetCommand(UUID customerId, String type, String name, String brand,
-                              String model, String serialNumber, Map<String, String> attributes) {
-    }
+
 }

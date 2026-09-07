@@ -1,56 +1,112 @@
 services:
+
   postgres:
     image: postgres:17-alpine
+    container_name: ares-postgres
+    restart: unless-stopped
+
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-ares}
       POSTGRES_USER: ${POSTGRES_USER:-ares}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ares}
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
     volumes:
       - ares-postgres-data:/var/lib/postgresql/data
+
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"
+        ]
       interval: 5s
       timeout: 3s
       retries: 10
 
+    networks:
+      - ares-network
+
+
   api:
     build:
       context: .
+
+    container_name: ares-api
+    restart: unless-stopped
+
     environment:
       DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-ares}
       DB_USERNAME: ${POSTGRES_USER:-ares}
-      DB_PASSWORD: ${POSTGRES_PASSWORD:-ares}
-      JWT_SECRET_BASE64: ${JWT_SECRET_BASE64:-VGhpcy1pcy1hLWRldmVsb3BtZW50LWtleS1jaGFuZ2UtaXQtaW4tcHJvZHVjdGlvbi0xMjM0NTY=}
-      SUBSCRIPTION_PAYMENT_SIMULATION_ENABLED: ${SUBSCRIPTION_PAYMENT_SIMULATION_ENABLED:-true}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+
+      JWT_SECRET_BASE64: ${JWT_SECRET_BASE64}
+      PUBLIC_WEB_URL: ${PUBLIC_WEB_URL:-http://localhost:3000}
+
+      SUBSCRIPTION_PAYMENT_SIMULATION_ENABLED: ${SUBSCRIPTION_PAYMENT_SIMULATION_ENABLED:-false}
+
+      PUBLIC_PROFILE_MEDIA_ROOT: /data/public-profile-media
+
     ports:
-      - "${API_PORT:-8080}:8080"
+      - "127.0.0.1:8080:8080"
+
+    volumes:
+      - ares-public-profile-media:/data/public-profile-media
+
     depends_on:
       postgres:
         condition: service_healthy
+
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O - http://localhost:8080/actuator/health/readiness | grep UP"]
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O - http://localhost:8080/actuator/health/readiness | grep UP"
+        ]
       interval: 10s
       timeout: 3s
       retries: 12
       start_period: 20s
 
+    networks:
+      - ares-network
+
+
   api-test:
-    profiles: ["test"]
+    profiles:
+      - test
+
     build:
       context: .
+
+    container_name: ares-api-test
+
     environment:
       SPRING_PROFILES_ACTIVE: test
-      JWT_SECRET_BASE64: ${JWT_SECRET_BASE64:-VGhpcy1pcy1hLWRldmVsb3BtZW50LWtleS1jaGFuZ2UtaXQtaW4tcHJvZHVjdGlvbi0xMjM0NTY=}
+      JWT_SECRET_BASE64: ${JWT_SECRET_BASE64}
+
     ports:
-      - "${TEST_API_PORT:-8081}:8080"
+      - "127.0.0.1:8081:8080"
+
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O - http://localhost:8080/actuator/health/readiness | grep UP"]
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q -O - http://localhost:8080/actuator/health/readiness | grep UP"
+        ]
       interval: 10s
       timeout: 3s
       retries: 12
       start_period: 20s
+
+    networks:
+      - ares-network
+
 
 volumes:
   ares-postgres-data:
+  ares-public-profile-media:
+
+
+networks:
+  ares-network:
+    driver: bridge

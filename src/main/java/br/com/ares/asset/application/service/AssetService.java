@@ -3,6 +3,7 @@ package br.com.ares.asset.application.service;
 import br.com.ares.asset.application.port.in.AssetDirectory;
 import br.com.ares.asset.application.port.in.AssetTypeDirectory;
 import br.com.ares.asset.application.port.in.AssetUseCase;
+import br.com.ares.asset.application.port.in.command.CreateAssetCommand;
 import br.com.ares.asset.application.port.out.AssetRepository;
 import br.com.ares.asset.domain.model.Asset;
 import br.com.ares.customer.application.port.in.CustomerDirectory;

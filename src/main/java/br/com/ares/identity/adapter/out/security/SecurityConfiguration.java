@@ -61,6 +61,8 @@ class SecurityConfiguration {
                             "/api/v1/tenants/plan-whatsapp-simulation",
                             "/api/v1/tenants/coupon-validation",
                             "/api/v1/branding",
+                            "/api/v1/public/profiles/**",
+                            "/api/v1/public/media/**",
                             "/api/v1/auth/login",
                             "/api/v1/customer/auth/login",
                             "/api/v1/auth/refresh",

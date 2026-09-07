@@ -7,6 +7,7 @@ import br.com.ares.identity.domain.service.PasswordPolicy;
 import br.com.ares.shared.application.AuditLogPort;
 import br.com.ares.tenant.application.port.in.TenantManagementUseCase;
 import br.com.ares.tenant.domain.model.SubscriptionPlan;
+import br.com.ares.tenant.domain.model.SubscriptionBillingCycle;
 import br.com.ares.tenant.domain.model.Tenant;
 import br.com.ares.tenant.domain.model.TenantStatus;
 import br.com.ares.tenant.application.service.SubscriptionPricingService;
@@ -53,10 +54,16 @@ class RegistrationServiceFeatureFlagTest {
         when(tenants.create(any())).thenAnswer(invocation -> {
             TenantManagementUseCase.CreateTenantCommand command = invocation.getArgument(0);
             return new Tenant(UUID.randomUUID(), command.legalName(), command.tradeName(), command.slug(),
-                    command.document(), TenantStatus.ACTIVE, command.logoUrl(), command.primaryColor(), true,
-                    command.subscriptionPlan(), command.subscriptionActive(), command.subscriptionPaidUntil(),
-                    command.subscriptionMonthlyPrice(), command.couponCode(), command.couponDiscountPercentage(),
-                    br.com.ares.tenant.domain.model.QuoteCalculationMethod.QUANTITY, null, null, NOW, NOW);
+                    command.document(), TenantStatus.ACTIVE, command.logoUrl(), command.primaryColor(),
+                    "#16A085", 12, true,
+                    command.subscriptionPlan(), command.subscriptionBillingCycle(), command.additionalUserSeats(),
+                    command.subscriptionActive(), command.subscriptionPaidUntil(), command.subscriptionPrice(),
+                    command.couponCode(), command.couponDiscountPercentage(),
+                    br.com.ares.tenant.domain.model.QuoteCalculationMethod.QUANTITY,
+                    java.util.EnumSet.allOf(br.com.ares.tenant.domain.model.QuoteCalculationMethod.class),
+                    null, null, false, null, null, null, null, null, null, false,
+                    br.com.ares.tenant.domain.model.PublicServiceSource.CATALOG, java.util.List.of(),
+                    "#2457E6", "#F6F4ED", "#142019", null, null, null, true, 18, NOW, NOW);
         });
     }
 
@@ -64,7 +71,8 @@ class RegistrationServiceFeatureFlagTest {
     void ignoresPaymentApprovalSentByTheBrowserWhenFeatureIsDisabled() {
         var result = service.register(new RegistrationUseCase.RegisterTenantAdminCommand(
                 "Ares Teste Ltda.", "Ares Teste", "ares-feature-off", "12345678000190",
-                null, "#2457E6", SubscriptionPlan.PROFESSIONAL, "11999999999", null, true,
+                null, "#2457E6", SubscriptionPlan.PRO, SubscriptionBillingCycle.MONTHLY, 0,
+                "11999999999", null, true,
                 true, true, "2026-08-27", "2026-08-27", "127.0.0.1", "JUnit",
                 "Administrador", "feature-off@example.com", "SenhaForte#123", "SenhaForte#123"));
 

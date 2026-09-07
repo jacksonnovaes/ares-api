@@ -22,6 +22,13 @@ class ServiceOrderJpaEntity {
     @Column(name="estimated_value")BigDecimal estimatedValue;@Column(name="final_value")BigDecimal finalValue;
     @Column(name="assigned_technician_id")UUID assignedTechnicianId;
     @Column(name="opened_at",nullable=false)Instant openedAt;@Column(name="due_at")Instant dueAt;
-    @Column(name="completed_at")Instant completedAt;@Column(name="created_at",nullable=false)Instant createdAt;
+    @Column(name="completed_at")Instant completedAt;
+    @Column(name="delivered_at")Instant deliveredAt;
+    @Column(name="delivery_received_by",length=160)String deliveryReceivedBy;
+    @Column(name="warranty_days")Integer warrantyDays;
+    @Column(name="warranty_until")Instant warrantyUntil;
+    @Column(name="warranty_terms",length=2000)String warrantyTerms;
+    @Column(name="delivery_notes",length=2000)String deliveryNotes;
+    @Column(name="created_at",nullable=false)Instant createdAt;
     @Column(name="updated_at",nullable=false)Instant updatedAt;protected ServiceOrderJpaEntity(){}
 }

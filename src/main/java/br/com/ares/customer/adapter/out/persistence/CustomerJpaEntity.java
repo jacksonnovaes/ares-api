@@ -3,35 +3,41 @@ package br.com.ares.customer.adapter.out.persistence;
 import br.com.ares.customer.domain.model.CustomerStatus;
 import br.com.ares.customer.domain.model.CustomerType;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.Instant;
 import java.util.UUID;
 
 @Entity
 @Table(name = "customers")
-class CustomerJpaEntity {
+@Getter
+@Setter
+public class CustomerJpaEntity {
     @Id
-    UUID id;
+    private UUID id;
     @Column(name = "tenant_id", nullable = false)
-    UUID tenantId;
+    private UUID tenantId;
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    CustomerType type;
+    private CustomerType type;
     @Column(nullable = false)
-    String name;
-    String document;
-    String email;
-    String phone;
+    private String name;
+    private String document;
+    private String email;
+    private String phone;
+    @Column(length = 500)
+    private String address;
     @Column(columnDefinition = "text")
-    String notes;
+    private String notes;
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    CustomerStatus status;
+    private CustomerStatus status;
     @Column(name = "created_at", nullable = false)
-    Instant createdAt;
+    private Instant createdAt;
     @Column(name = "updated_at", nullable = false)
-    Instant updatedAt;
+    private Instant updatedAt;
 
-    protected CustomerJpaEntity() {
+    public CustomerJpaEntity() {
     }
 }

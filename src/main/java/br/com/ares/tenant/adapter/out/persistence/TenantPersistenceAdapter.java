@@ -64,6 +64,7 @@ class TenantPersistenceAdapter implements TenantRepository {
         jdbc.update("DELETE FROM service_order_statuses WHERE tenant_id = ?", tenantId);
         jdbc.update("DELETE FROM asset_types WHERE tenant_id = ?", tenantId);
         jdbc.update("DELETE FROM audit_events WHERE tenant_id = ?", tenantId);
+        jdbc.update("DELETE FROM tenant_quote_calculation_methods WHERE tenant_id = ?", tenantId);
         jdbc.update("DELETE FROM tenants WHERE id = ?", tenantId);
     }
 
@@ -77,16 +78,46 @@ class TenantPersistenceAdapter implements TenantRepository {
         entity.status = tenant.status();
         entity.logoUrl = tenant.logoUrl();
         entity.primaryColor = tenant.primaryColor();
+        entity.secondaryColor = tenant.secondaryColor();
+        entity.borderRadius = tenant.borderRadius();
         entity.requireAssets = tenant.requireAssets();
         entity.subscriptionPlan = tenant.subscriptionPlan();
+        entity.subscriptionBillingCycle = tenant.subscriptionBillingCycle();
+        entity.additionalUserSeats = tenant.additionalUserSeats();
         entity.subscriptionActive = tenant.subscriptionActive();
         entity.subscriptionPaidUntil = tenant.subscriptionPaidUntil();
-        entity.subscriptionMonthlyPrice = tenant.subscriptionMonthlyPrice();
+        entity.subscriptionPrice = tenant.subscriptionPrice();
         entity.couponCode = tenant.couponCode();
         entity.couponDiscountPercentage = tenant.couponDiscountPercentage();
         entity.quoteCalculationMethod = tenant.quoteCalculationMethod();
+        entity.enabledQuoteCalculationMethods = new java.util.LinkedHashSet<>(
+                tenant.enabledQuoteCalculationMethods());
         entity.defaultSquareMeterPrice = tenant.defaultSquareMeterPrice();
         entity.defaultCubicMeterPrice = tenant.defaultCubicMeterPrice();
+        entity.publicPageEnabled = tenant.publicPageEnabled();
+        entity.publicHeadline = tenant.publicHeadline();
+        entity.publicDescription = tenant.publicDescription();
+        entity.publicWhatsapp = tenant.publicWhatsapp();
+        entity.publicEmail = tenant.publicEmail();
+        entity.publicCity = tenant.publicCity();
+        entity.publicServiceArea = tenant.publicServiceArea();
+        entity.publicShowPrices = tenant.publicShowPrices();
+        entity.publicServiceSource = tenant.publicServiceSource();
+        entity.publicManualServices = tenant.publicManualServices().stream().map(value -> {
+            var item = new PublicProfileManualServiceJpaEmbeddable();
+            item.name = value.name();
+            item.description = value.description();
+            item.basePrice = value.basePrice();
+            return item;
+        }).collect(java.util.stream.Collectors.toCollection(java.util.ArrayList::new));
+        entity.publicAccentColor = tenant.publicAccentColor();
+        entity.publicBackgroundColor = tenant.publicBackgroundColor();
+        entity.publicTextColor = tenant.publicTextColor();
+        entity.publicProfileImagePath = tenant.publicProfileImagePath();
+        entity.publicLogoPath = tenant.publicLogoPath();
+        entity.publicBackgroundImagePath = tenant.publicBackgroundImagePath();
+        entity.publicShowLogo = tenant.publicShowLogo();
+        entity.publicBackgroundOverlayPercentage = tenant.publicBackgroundOverlayPercentage();
         entity.createdAt = tenant.createdAt();
         entity.updatedAt = tenant.updatedAt();
         return entity;
@@ -94,10 +125,24 @@ class TenantPersistenceAdapter implements TenantRepository {
 
     private Tenant toDomain(TenantJpaEntity entity) {
         return new Tenant(entity.id, entity.legalName, entity.tradeName, entity.slug, entity.document,
-                entity.status, entity.logoUrl, entity.primaryColor, entity.requireAssets, entity.subscriptionPlan,
-                entity.subscriptionActive, entity.subscriptionPaidUntil, entity.subscriptionMonthlyPrice,
+                entity.status, entity.logoUrl, entity.primaryColor, entity.secondaryColor, entity.borderRadius,
+                entity.requireAssets, entity.subscriptionPlan,
+                entity.subscriptionBillingCycle, entity.additionalUserSeats, entity.subscriptionActive,
+                entity.subscriptionPaidUntil, entity.subscriptionPrice,
                 entity.couponCode, entity.couponDiscountPercentage, entity.quoteCalculationMethod,
+                java.util.Set.copyOf(entity.enabledQuoteCalculationMethods),
                 entity.defaultSquareMeterPrice, entity.defaultCubicMeterPrice,
+                entity.publicPageEnabled, entity.publicHeadline, entity.publicDescription,
+                entity.publicWhatsapp, entity.publicEmail, entity.publicCity, entity.publicServiceArea,
+                entity.publicShowPrices,
+                entity.publicServiceSource,
+                entity.publicManualServices.stream().map(value ->
+                        new br.com.ares.tenant.domain.model.PublicProfileManualService(
+                                value.name, value.description, value.basePrice)).toList(),
+                entity.publicAccentColor, entity.publicBackgroundColor, entity.publicTextColor,
+                entity.publicProfileImagePath, entity.publicLogoPath, entity.publicBackgroundImagePath,
+                entity.publicShowLogo,
+                entity.publicBackgroundOverlayPercentage,
                 entity.createdAt, entity.updatedAt);
     }
 }
