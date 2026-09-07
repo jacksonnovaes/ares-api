@@ -24,20 +24,20 @@ public class AssetController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAuthority('ASSET_CREATE')")
-    Asset create(@Valid @RequestBody CreateAssetRequest r) {
+    public Asset create(@Valid @RequestBody CreateAssetRequest r) {
         return assets.create(new CreateAssetCommand(r.customerId(), r.type(), r.name(), r.brand(),
                 r.model(), r.serialNumber(), r.attributes()));
     }
 
     @GetMapping
     @PreAuthorize("hasAuthority('ASSET_READ')")
-    List<Asset> list(@RequestParam(required = false) UUID customerId) {
+    public List<Asset> list(@RequestParam(required = false) UUID customerId) {
         return assets.list(customerId);
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('ASSET_READ')")
-    Asset get(@PathVariable UUID id) {
+    public Asset get(@PathVariable UUID id) {
         return assets.get(id);
     }
 

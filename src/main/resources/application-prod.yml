@@ -52,6 +52,8 @@ springdoc:
     enabled: ${SPRINGDOC_SWAGGER_UI_ENABLED:true}
 
 ares:
+  web:
+    base-url: ${PUBLIC_WEB_URL}
   features:
     subscription-payment-simulation-enabled: ${SUBSCRIPTION_PAYMENT_SIMULATION_ENABLED:false}
   legal:

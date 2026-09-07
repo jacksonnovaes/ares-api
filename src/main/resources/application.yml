@@ -26,6 +26,8 @@ management:
         enabled: true
 
 ares:
+  web:
+    base-url: ${PUBLIC_WEB_URL:http://localhost:3000}
   features:
     subscription-payment-simulation-enabled: ${SUBSCRIPTION_PAYMENT_SIMULATION_ENABLED:false}
   legal:
