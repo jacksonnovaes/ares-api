@@ -11,6 +11,8 @@ services:
     image: postgres:17-alpine
     restart: unless-stopped
     shm_size: 128mb
+    ports:
+      - "127.0.0.1:5432:5432"
     environment:
       POSTGRES_DB: ${POSTGRES_DB:?Defina POSTGRES_DB em .env.production}
       POSTGRES_USER: ${POSTGRES_USER:?Defina POSTGRES_USER em .env.production}
