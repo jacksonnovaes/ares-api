@@ -94,6 +94,20 @@ public record Tenant(
                 createdAt, at);
     }
 
+    public Tenant withAdministrativeAccess(boolean enabled, Instant at) {
+        return new Tenant(id, legalName, tradeName, slug, document,
+                enabled ? TenantStatus.ACTIVE : TenantStatus.BLOCKED,
+                logoUrl, primaryColor, secondaryColor, borderRadius, requireAssets,
+                subscriptionPlan, subscriptionBillingCycle, additionalUserSeats, enabled,
+                subscriptionPaidUntil, subscriptionPrice, couponCode, couponDiscountPercentage,
+                quoteCalculationMethod, enabledQuoteCalculationMethods, defaultSquareMeterPrice,
+                defaultCubicMeterPrice, publicPageEnabled, publicHeadline, publicDescription,
+                publicWhatsapp, publicEmail, publicCity, publicServiceArea, publicShowPrices,
+                publicServiceSource, publicManualServices, publicAccentColor, publicBackgroundColor,
+                publicTextColor, publicProfileImagePath, publicLogoPath, publicBackgroundImagePath,
+                publicShowLogo, publicBackgroundOverlayPercentage, createdAt, at);
+    }
+
     public Tenant withCompanySettings(boolean assetsRequired, QuoteCalculationMethod calculationMethod,
                                       Set<QuoteCalculationMethod> enabledCalculationMethods,
                                       BigDecimal squareMeterPrice, BigDecimal cubicMeterPrice, Instant at) {

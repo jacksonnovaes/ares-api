@@ -6,6 +6,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
 
 @Component
@@ -32,6 +33,11 @@ class TenantPersistenceAdapter implements TenantRepository {
     @Override
     public Optional<Tenant> findBySlug(String slug) {
         return repository.findBySlug(slug).map(this::toDomain);
+    }
+
+    @Override
+    public List<Tenant> findAll() {
+        return repository.findAll().stream().map(this::toDomain).toList();
     }
 
     @Override
