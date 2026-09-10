@@ -59,7 +59,7 @@ class AppearanceSettingsServiceTest {
     @Test
     void persistsTheTenantAppearanceInsteadOfUsingBrowserStorage() {
         var result = service.update(new AppearanceSettingsUseCase.UpdateAppearanceCommand(
-                "Minha Oficina", "#123ABC", "#ABC123", 18));
+                "Minha Oficina", "#123ABC", "#ABC123", 18, true));
 
         var saved = ArgumentCaptor.forClass(Tenant.class);
         verify(tenants).save(saved.capture());
@@ -67,13 +67,15 @@ class AppearanceSettingsServiceTest {
         assertThat(saved.getValue().primaryColor()).isEqualTo("#123ABC");
         assertThat(saved.getValue().secondaryColor()).isEqualTo("#ABC123");
         assertThat(saved.getValue().borderRadius()).isEqualTo(18);
+        assertThat(saved.getValue().darkMode()).isTrue();
         assertThat(result.tradeName()).isEqualTo("Minha Oficina");
         assertThat(result.borderRadius()).isEqualTo(18);
+        assertThat(result.darkMode()).isTrue();
     }
 
     private Tenant tenant() {
         return new Tenant(tenantId, "Ares Ltda.", "Ares", "ares", "12345678000190", TenantStatus.ACTIVE,
-                null, "#2457E6", "#16A085", 12, false, SubscriptionPlan.SOLO,
+                null, "#2457E6", "#16A085", 12, false, false, SubscriptionPlan.SOLO,
                 SubscriptionBillingCycle.MONTHLY, 0, true, NOW.plusSeconds(2_592_000),
                 new BigDecimal("29.90"), null, BigDecimal.ZERO.setScale(2), QuoteCalculationMethod.QUANTITY,
                 EnumSet.allOf(QuoteCalculationMethod.class), null, null, false, null, null, null, null, null,

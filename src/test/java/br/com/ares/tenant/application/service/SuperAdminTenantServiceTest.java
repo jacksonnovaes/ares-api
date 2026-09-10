@@ -90,7 +90,7 @@ class SuperAdminTenantServiceTest {
 
     private Tenant tenant(UUID id, TenantStatus status, boolean subscriptionActive) {
         return new Tenant(id, "Empresa Teste Ltda.", "Empresa Teste", "empresa-teste", "12345678000190",
-                status, null, "#2457E6", "#16A085", 12, true, SubscriptionPlan.SOLO,
+                status, null, "#2457E6", "#16A085", 12, false, true, SubscriptionPlan.SOLO,
                 SubscriptionBillingCycle.MONTHLY, 0, subscriptionActive, null, new BigDecimal("29.90"),
                 null, BigDecimal.ZERO.setScale(2), QuoteCalculationMethod.QUANTITY,
                 EnumSet.allOf(QuoteCalculationMethod.class), null, null, false, null, null, null, null,

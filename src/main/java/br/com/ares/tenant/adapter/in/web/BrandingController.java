@@ -25,10 +25,10 @@ public class BrandingController {
         var tenant = tenants.findBySlug(slug).orElseThrow(() ->
                 BusinessException.notFound("branding_not_found", "Identidade visual não encontrada."));
         return new BrandingResponse(tenant.tradeName(), tenant.slug(), tenant.logoUrl(), tenant.primaryColor(),
-                tenant.secondaryColor(), tenant.borderRadius());
+                tenant.secondaryColor(), tenant.borderRadius(), tenant.darkMode());
     }
 
     record BrandingResponse(String tradeName, String slug, String logoUrl, String primaryColor,
-                            String secondaryColor, int borderRadius) {
+                            String secondaryColor, int borderRadius, boolean darkMode) {
     }
 }

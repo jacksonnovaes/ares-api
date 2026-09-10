@@ -33,13 +33,13 @@ public class AppearanceSettingsController {
     @PreAuthorize("hasAuthority('TENANT_CONFIGURE')")
     AppearanceSettingsUseCase.AppearanceSettings update(@Valid @RequestBody UpdateAppearanceRequest request) {
         return settings.update(new AppearanceSettingsUseCase.UpdateAppearanceCommand(request.tradeName(),
-                request.primaryColor(), request.secondaryColor(), request.borderRadius()));
+                request.primaryColor(), request.secondaryColor(), request.borderRadius(), request.darkMode()));
     }
 
     record UpdateAppearanceRequest(@NotBlank @Size(min = 2, max = 160) String tradeName,
                                    @NotBlank @Pattern(regexp = "^#[0-9A-Fa-f]{6}$") String primaryColor,
                                    @NotBlank @Pattern(regexp = "^#[0-9A-Fa-f]{6}$") String secondaryColor,
-                                   @Min(6) @Max(24) int borderRadius) {
+                                   @Min(6) @Max(24) int borderRadius, boolean darkMode) {
     }
 }
 

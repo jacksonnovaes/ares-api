@@ -39,6 +39,8 @@ class TenantJpaEntity {
     String secondaryColor;
     @Column(name = "border_radius", nullable = false)
     int borderRadius;
+    @Column(name = "dark_mode", nullable = false)
+    boolean darkMode;
     @Column(name = "require_assets", nullable = false)
     boolean requireAssets;
     @Enumerated(EnumType.STRING)

@@ -60,7 +60,7 @@ public class TenantService implements TenantManagementUseCase, CompanySettingsUs
         Instant now = clock.instant();
         var tenant = new Tenant(UUID.randomUUID(), command.legalName().trim(), command.tradeName().trim(),
                 slug, onlyDigits(command.document()), TenantStatus.ACTIVE, command.logoUrl(),
-                command.primaryColor(), "#16A085", 12, true, command.subscriptionPlan(),
+                command.primaryColor(), "#16A085", 12, false, true, command.subscriptionPlan(),
                 command.subscriptionBillingCycle(),
                 command.additionalUserSeats(), command.subscriptionActive(), command.subscriptionPaidUntil(),
                 command.subscriptionPrice(), command.couponCode(),
@@ -94,7 +94,7 @@ public class TenantService implements TenantManagementUseCase, CompanySettingsUs
         Tenant current = requiredById(id);
         return repository.save(new Tenant(current.id(), current.legalName(), current.tradeName(), current.slug(),
                 current.document(), status, current.logoUrl(), current.primaryColor(), current.secondaryColor(),
-                current.borderRadius(),
+                current.borderRadius(), current.darkMode(),
                 current.requireAssets(), current.subscriptionPlan(), current.subscriptionBillingCycle(),
                 current.additionalUserSeats(), current.subscriptionActive(), current.subscriptionPaidUntil(),
                 current.subscriptionPrice(), current.couponCode(),

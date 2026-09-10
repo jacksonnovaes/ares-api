@@ -86,6 +86,7 @@ class TenantPersistenceAdapter implements TenantRepository {
         entity.primaryColor = tenant.primaryColor();
         entity.secondaryColor = tenant.secondaryColor();
         entity.borderRadius = tenant.borderRadius();
+        entity.darkMode = tenant.darkMode();
         entity.requireAssets = tenant.requireAssets();
         entity.subscriptionPlan = tenant.subscriptionPlan();
         entity.subscriptionBillingCycle = tenant.subscriptionBillingCycle();
@@ -131,7 +132,7 @@ class TenantPersistenceAdapter implements TenantRepository {
 
     private Tenant toDomain(TenantJpaEntity entity) {
         return new Tenant(entity.id, entity.legalName, entity.tradeName, entity.slug, entity.document,
-                entity.status, entity.logoUrl, entity.primaryColor, entity.secondaryColor, entity.borderRadius,
+                entity.status, entity.logoUrl, entity.primaryColor, entity.secondaryColor, entity.borderRadius, entity.darkMode,
                 entity.requireAssets, entity.subscriptionPlan,
                 entity.subscriptionBillingCycle, entity.additionalUserSeats, entity.subscriptionActive,
                 entity.subscriptionPaidUntil, entity.subscriptionPrice,
