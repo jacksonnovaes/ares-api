@@ -5,6 +5,10 @@ on:
     branches:
       - development
       - main
+  pull_request:
+    branches:
+      - development
+      - main
   workflow_dispatch:
 
 concurrency:
@@ -15,8 +19,28 @@ permissions:
   contents: read
 
 jobs:
+  quality:
+    name: Test and package
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout API
+        uses: actions/checkout@v7
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+
+      - name: Run tests and package
+        run: mvn -B verify
+
   deploy:
-    if: vars.DEPLOY_ENABLED == 'true'
+    if: github.event_name != 'pull_request' && vars.DEPLOY_ENABLED == 'true'
+    needs: quality
     name: Validate and deploy
     runs-on: ubuntu-latest
     timeout-minutes: 45
