@@ -25,14 +25,14 @@ class ServiceOrderPersistenceAdapter implements ServiceOrderRepository{
         e.quoteLines=v.quoteLines().stream().map(this::toLineEntity).collect(java.util.stream.Collectors.toCollection(ArrayList::new));e.title=v.title();
         e.description=v.description();e.status=v.status();e.priority=v.priority();e.estimatedValue=v.estimatedValue();
         e.finalValue=v.finalValue();e.assignedTechnicianId=v.assignedTechnicianId();e.openedAt=v.openedAt();e.dueAt=v.dueAt();
-        e.completedAt=v.completedAt();
+        e.scheduledStartAt=v.scheduledStartAt();e.scheduledEndAt=v.scheduledEndAt();e.completedAt=v.completedAt();
         if(v.delivery()!=null){e.deliveredAt=v.delivery().deliveredAt();e.deliveryReceivedBy=v.delivery().receivedBy();
             e.warrantyDays=v.delivery().warrantyDays();e.warrantyUntil=v.delivery().warrantyUntil();
             e.warrantyTerms=v.delivery().warrantyTerms();e.deliveryNotes=v.delivery().notes();}
         e.createdAt=v.createdAt();e.updatedAt=v.updatedAt();return e;}
     private ServiceOrder toDomain(ServiceOrderJpaEntity e){return new ServiceOrder(e.id,e.tenantId,e.customerId,e.assetId,
             Set.copyOf(e.serviceIds),e.quoteLines.stream().map(this::toLineDomain).toList(),e.title,e.description,e.status,e.priority,e.estimatedValue,e.finalValue,
-            e.assignedTechnicianId,e.openedAt,e.dueAt,e.completedAt,toDelivery(e),e.createdAt,e.updatedAt);}
+            e.assignedTechnicianId,e.openedAt,e.dueAt,e.scheduledStartAt,e.scheduledEndAt,e.completedAt,toDelivery(e),e.createdAt,e.updatedAt);}
     private ServiceOrderDelivery toDelivery(ServiceOrderJpaEntity e){
         if(e.deliveredAt==null)return null;
         return new ServiceOrderDelivery(e.deliveredAt,e.deliveryReceivedBy,e.warrantyDays==null?0:e.warrantyDays,

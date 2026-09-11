@@ -12,9 +12,12 @@ public interface ServiceOrderUseCase {
     List<ServiceOrder> list();
     ServiceOrder changeStatus(UUID id, ChangeStatusCommand command);
     ServiceOrder updateQuote(UUID id, UpdateQuoteCommand command);
+    ServiceOrder updatePlanning(UUID id, UpdatePlanningCommand command);
+    List<TechnicianView> listTechnicians();
+    List<TimelineEvent> timeline(UUID id);
     record CreateOrderCommand(UUID customerId, UUID assetId, List<QuoteLineCommand> quoteLines, String title,
                               String description, ServiceOrderPriority priority,
-                              UUID assignedTechnicianId, Instant dueAt) {}
+                              UUID assignedTechnicianId, Instant dueAt, Instant scheduledStartAt, Instant scheduledEndAt) {}
     record ChangeStatusCommand(String status, BigDecimal finalValue, String deliveryReceivedBy,
                                Integer warrantyDays, String warrantyTerms, String deliveryNotes) {
         public ChangeStatusCommand(String status, BigDecimal finalValue) {
@@ -22,6 +25,11 @@ public interface ServiceOrderUseCase {
         }
     }
     record UpdateQuoteCommand(UUID assetId, List<QuoteLineCommand> quoteLines) {}
+    record UpdatePlanningCommand(UUID assignedTechnicianId, Instant dueAt, Instant scheduledStartAt,
+                                 Instant scheduledEndAt) {}
+    record TechnicianView(UUID id, String name) {}
+    record TimelineEvent(UUID id, String action, UUID actorId, String actorName, String detailsJson,
+                         Instant occurredAt) {}
     record QuoteLineCommand(UUID serviceId, String description, String notes, BigDecimal quantity,
                             String unit, BigDecimal unitPrice, QuoteCalculationMethod calculationMethod,
                             BigDecimal widthMeters, BigDecimal lengthMeters, BigDecimal heightMeters) {

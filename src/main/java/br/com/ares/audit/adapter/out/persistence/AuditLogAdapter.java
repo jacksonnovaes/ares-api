@@ -50,6 +50,15 @@ class AuditLogAdapter implements AuditLogPort {
                 .toList();
     }
 
+    @Override
+    public List<AuditEventView> findAllByTenantIdAndResource(UUID tenantId, String resourceType, String resourceId) {
+        return repository.findAllByTenantIdAndResourceTypeAndResourceIdOrderByOccurredAtAsc(
+                        tenantId, resourceType, resourceId).stream()
+                .map(entity -> new AuditEventView(entity.id, entity.actorId, entity.action,
+                        entity.resourceType, entity.resourceId, entity.detailsJson, entity.occurredAt))
+                .toList();
+    }
+
     private String json(Map<String, Object> details) {
         try {
             return objectMapper.writeValueAsString(details);

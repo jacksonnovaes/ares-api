@@ -44,13 +44,19 @@ public class ServiceOrderService implements ServiceOrderUseCase {
                 "invalid_catalog_services","Um ou mais serviços não existem ou estão inativos.");
         validateAsset(tenant,c.customerId(),c.assetId(),tenantSettings.requireAssets(tenant)
                 &&catalog.anyRequiresAsset(tenant,serviceIds));
-        if(c.assignedTechnicianId()!=null&&!users.activeUserExists(tenant,c.assignedTechnicianId()))
+        if(c.assignedTechnicianId()!=null&&!users.activeTechnicianExists(tenant,c.assignedTechnicianId()))
             throw BusinessException.badRequest("invalid_technician","Técnico inválido para este tenant.");
         Instant now=clock.instant();var order=new ServiceOrder(UUID.randomUUID(),tenant,c.customerId(),c.assetId(),
                 serviceIds,quoteLines,c.title().trim(),c.description(),"OPEN",c.priority(),
-                quoteTotal(quoteLines),null,c.assignedTechnicianId(),now,c.dueAt(),null,null,now,now);
-        order=repository.save(order);audit.record(tenant,actor.userId(),"SERVICE_ORDER_CREATED","SERVICE_ORDER",
-                order.id().toString(),Map.of("customerId",c.customerId()));return order;}
+                quoteTotal(quoteLines),null,c.assignedTechnicianId(),now,c.dueAt(),null,null,null,null,now,now)
+                .updatePlanning(c.assignedTechnicianId(),c.dueAt(),c.scheduledStartAt(),c.scheduledEndAt(),now);
+        order=repository.save(order);
+        Map<String,Object> details=new LinkedHashMap<>();details.put("customerId",c.customerId());
+        if(c.assignedTechnicianId()!=null)details.put("assignedTechnicianId",c.assignedTechnicianId());
+        if(c.scheduledStartAt()!=null){details.put("scheduledStartAt",c.scheduledStartAt());
+            details.put("scheduledEndAt",c.scheduledEndAt());}
+        audit.record(tenant,actor.userId(),"SERVICE_ORDER_CREATED","SERVICE_ORDER",
+                order.id().toString(),details);return order;}
 
     @Override @Transactional(readOnly=true)
     public ServiceOrder get(UUID id){var actor=currentActor.requiredActor();ServiceOrder order=required(id,actor.tenantId());
@@ -91,6 +97,40 @@ public class ServiceOrderService implements ServiceOrderUseCase {
         audit.record(actor.tenantId(),actor.userId(),"SERVICE_ORDER_QUOTE_UPDATED","SERVICE_ORDER",
                 order.id().toString(),Map.of("lineCount",lines.size(),"estimatedValue",order.estimatedValue()));
         return order;}
+
+    @Override @Transactional
+    public ServiceOrder updatePlanning(UUID id,UpdatePlanningCommand c){var actor=currentActor.requiredActor();
+        rejectCustomerWrite(actor);ServiceOrder order=required(id,actor.tenantId());enforceScope(order,actor);
+        UUID technicianId=c.assignedTechnicianId();
+        boolean restrictedTechnician=actor.hasRole("TECHNICIAN")&&!actor.hasRole("ADMIN")&&!actor.hasRole("MANAGER");
+        if(restrictedTechnician&&!Objects.equals(technicianId,order.assignedTechnicianId()))
+            throw BusinessException.forbidden("technician_assignment_forbidden",
+                    "Técnicos não podem alterar o responsável pela ordem.");
+        if(technicianId!=null&&!users.activeTechnicianExists(actor.tenantId(),technicianId))
+            throw BusinessException.badRequest("invalid_technician","Selecione um técnico ativo deste tenant.");
+        Instant now=clock.instant();
+        order=repository.save(order.updatePlanning(technicianId,c.dueAt(),c.scheduledStartAt(),c.scheduledEndAt(),now));
+        Map<String,Object> details=new LinkedHashMap<>();
+        if(technicianId!=null)details.put("assignedTechnicianId",technicianId);
+        if(c.dueAt()!=null)details.put("dueAt",c.dueAt());
+        if(c.scheduledStartAt()!=null){details.put("scheduledStartAt",c.scheduledStartAt());
+            details.put("scheduledEndAt",c.scheduledEndAt());}
+        audit.record(actor.tenantId(),actor.userId(),"SERVICE_ORDER_PLANNING_UPDATED","SERVICE_ORDER",
+                order.id().toString(),details);
+        return order;}
+
+    @Override @Transactional(readOnly=true)
+    public List<TechnicianView> listTechnicians(){var actor=currentActor.requiredActor();rejectCustomerWrite(actor);
+        return users.activeTechnicians(actor.tenantId()).stream()
+                .map(user->new TechnicianView(user.id(),user.name())).toList();}
+
+    @Override @Transactional(readOnly=true)
+    public List<TimelineEvent> timeline(UUID id){var actor=currentActor.requiredActor();
+        ServiceOrder order=required(id,actor.tenantId());enforceScope(order,actor);
+        return audit.findAllByTenantIdAndResource(actor.tenantId(),"SERVICE_ORDER",order.id().toString()).stream()
+                .map(event->new TimelineEvent(event.id(),event.action(),event.actorId(),
+                        users.userName(actor.tenantId(),event.actorId()).orElse("Usuário removido"),
+                        event.detailsJson(),event.occurredAt())).toList();}
 
     private ServiceOrder required(UUID id,UUID tenant){return repository.findByIdAndTenantId(id,tenant).orElseThrow(()->
             BusinessException.notFound("service_order_not_found","Ordem de serviço não encontrada."));}

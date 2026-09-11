@@ -169,7 +169,7 @@ class ServiceOrderDocumentServiceTest {
         var order = new ServiceOrder(UUID.randomUUID(), tenantId, customerId, assetId, Set.of(serviceId),
                 List.of(quoteLine), "Revisão preventiva", "Executar revisão completa", "COMPLETED",
                 ServiceOrderPriority.NORMAL, new BigDecimal("350.00"), new BigDecimal("350.00"), null, NOW,
-                NOW.plusSeconds(86400), NOW, delivery, NOW, NOW);
+                NOW.plusSeconds(86400), null, null, NOW, delivery, NOW, NOW);
         return new Fixture(tenant, customer, assetType, asset, order);
     }
 

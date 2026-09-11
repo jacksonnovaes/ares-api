@@ -7,4 +7,6 @@ import java.util.UUID;
 
 interface SpringDataAuditEventRepository extends JpaRepository<AuditEventJpaEntity, UUID> {
     List<AuditEventJpaEntity> findAllByTenantIdOrderByOccurredAtAsc(UUID tenantId);
+    List<AuditEventJpaEntity> findAllByTenantIdAndResourceTypeAndResourceIdOrderByOccurredAtAsc(
+            UUID tenantId, String resourceType, String resourceId);
 }

@@ -95,6 +95,6 @@ class ServiceOrderQuoteTest {
     private ServiceOrder order() {
         return new ServiceOrder(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
                 Set.of(), List.of(), "Reparo", null, "OPEN", ServiceOrderPriority.NORMAL,
-                BigDecimal.ZERO, null, null, NOW, null, null, null, NOW, NOW);
+                BigDecimal.ZERO, null, null, NOW, null, null, null, null, null, NOW, NOW);
     }
 }

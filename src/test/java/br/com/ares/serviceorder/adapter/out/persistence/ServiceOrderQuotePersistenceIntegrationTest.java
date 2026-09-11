@@ -37,7 +37,7 @@ class ServiceOrderQuotePersistenceIntegrationTest {
                 now.plusSeconds(90L * 86400), "Garantia dos serviços executados.", "Entregue testado.");
         var order = new ServiceOrder(orderId, UUID.randomUUID(), UUID.randomUUID(), null, Set.of(),
                 lines, "Reforma", "Orçamento de alvenaria", "COMPLETED", ServiceOrderPriority.NORMAL,
-                new BigDecimal("1342.50"), null, null, now, null, now, delivery, now, now);
+                new BigDecimal("1342.50"), null, null, now, null, null, null, now, delivery, now, now);
 
         repository.save(order);
         ServiceOrder restored = repository.findByIdAndTenantId(orderId, order.tenantId()).orElseThrow();

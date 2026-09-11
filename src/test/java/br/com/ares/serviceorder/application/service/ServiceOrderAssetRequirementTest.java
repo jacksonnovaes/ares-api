@@ -105,6 +105,6 @@ class ServiceOrderAssetRequirementTest {
         var line = new ServiceOrderUseCase.QuoteLineCommand(catalogServiceId, "Serviço cadastrado",
                 BigDecimal.ONE, "SERVICO", new BigDecimal("150.00"));
         return new ServiceOrderUseCase.CreateOrderCommand(customerId, assetId, List.of(line), "Atendimento",
-                null, ServiceOrderPriority.NORMAL, null, null);
+                null, ServiceOrderPriority.NORMAL, null, null, null, null);
     }
 }

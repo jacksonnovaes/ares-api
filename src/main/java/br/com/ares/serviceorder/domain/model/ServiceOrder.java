@@ -8,7 +8,8 @@ import java.util.*;
 public record ServiceOrder(UUID id, UUID tenantId, UUID customerId, UUID assetId, Set<UUID> serviceIds,
                            List<ServiceOrderLine> quoteLines, String title, String description, String status,
                            ServiceOrderPriority priority, BigDecimal estimatedValue, BigDecimal finalValue,
-                           UUID assignedTechnicianId, Instant openedAt, Instant dueAt, Instant completedAt,
+                           UUID assignedTechnicianId, Instant openedAt, Instant dueAt, Instant scheduledStartAt,
+                           Instant scheduledEndAt, Instant completedAt,
                            ServiceOrderDelivery delivery,
                            Instant createdAt, Instant updatedAt) {
 
@@ -26,7 +27,23 @@ public record ServiceOrder(UUID id, UUID tenantId, UUID customerId, UUID assetId
                 : newFinalValue;
         return new ServiceOrder(id, tenantId, customerId, assetId, serviceIds, quoteLines, title, description, next,
                 priority, estimatedValue, resultingFinalValue, assignedTechnicianId, openedAt, dueAt,
-                completed, resultingDelivery, createdAt, at);
+                scheduledStartAt, scheduledEndAt, completed, resultingDelivery, createdAt, at);
+    }
+
+
+    public ServiceOrder updatePlanning(UUID technicianId, Instant newDueAt, Instant startAt, Instant endAt, Instant at) {
+        boolean onlyOneScheduleBoundary = (startAt == null) != (endAt == null);
+        if (onlyOneScheduleBoundary) {
+            throw BusinessException.badRequest("service_order_schedule_incomplete",
+                    "Informe o início e o fim do atendimento.");
+        }
+        if (startAt != null && !endAt.isAfter(startAt)) {
+            throw BusinessException.badRequest("service_order_schedule_invalid",
+                    "O fim do atendimento deve ser posterior ao início.");
+        }
+        return new ServiceOrder(id, tenantId, customerId, assetId, serviceIds, quoteLines, title, description, status,
+                priority, estimatedValue, finalValue, technicianId, openedAt, newDueAt, startAt, endAt, completedAt,
+                delivery, createdAt, at);
     }
 
     public ServiceOrder replaceQuote(List<ServiceOrderLine> lines, UUID newAssetId, Instant at) {
@@ -42,7 +59,7 @@ public record ServiceOrder(UUID id, UUID tenantId, UUID customerId, UUID assetId
                 .map(ServiceOrderLine::total)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         return new ServiceOrder(id, tenantId, customerId, newAssetId, selectedServices, snapshot, title, description,
-                status, priority, total, finalValue, assignedTechnicianId, openedAt, dueAt, completedAt,
-                delivery, createdAt, at);
+                status, priority, total, finalValue, assignedTechnicianId, openedAt, dueAt, scheduledStartAt,
+                scheduledEndAt, completedAt, delivery, createdAt, at);
     }
 }

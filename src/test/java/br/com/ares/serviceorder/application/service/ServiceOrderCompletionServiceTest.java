@@ -61,7 +61,7 @@ class ServiceOrderCompletionServiceTest {
         when(currentActor.requiredActor()).thenReturn(actor);
         order = new ServiceOrder(UUID.randomUUID(), tenantId, UUID.randomUUID(), null, Set.of(), List.of(),
                 "Instalação elétrica", null, "IN_PROGRESS", ServiceOrderPriority.NORMAL,
-                new BigDecimal("480.00"), null, null, NOW.minusSeconds(86400), null, null, null,
+                new BigDecimal("480.00"), null, null, NOW.minusSeconds(86400), null, null, null, null, null,
                 NOW.minusSeconds(86400), NOW.minusSeconds(86400));
         when(repository.findByIdAndTenantId(order.id(), tenantId)).thenReturn(Optional.of(order));
         when(statuses.requiredActive(tenantId, "COMPLETED")).thenReturn(new ServiceOrderStatusDefinition(

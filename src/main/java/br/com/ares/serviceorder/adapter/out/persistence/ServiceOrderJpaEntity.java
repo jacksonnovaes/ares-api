@@ -22,6 +22,8 @@ class ServiceOrderJpaEntity {
     @Column(name="estimated_value")BigDecimal estimatedValue;@Column(name="final_value")BigDecimal finalValue;
     @Column(name="assigned_technician_id")UUID assignedTechnicianId;
     @Column(name="opened_at",nullable=false)Instant openedAt;@Column(name="due_at")Instant dueAt;
+    @Column(name="scheduled_start_at")Instant scheduledStartAt;
+    @Column(name="scheduled_end_at")Instant scheduledEndAt;
     @Column(name="completed_at")Instant completedAt;
     @Column(name="delivered_at")Instant deliveredAt;
     @Column(name="delivery_received_by",length=160)String deliveryReceivedBy;
