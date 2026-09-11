@@ -8,6 +8,7 @@ public interface ServiceOrderEmailSender {
 
     String deliveryMode();
 
-    record EmailMessage(UUID tenantId, String recipient, String subject, String body) {
+    record EmailMessage(UUID tenantId, String recipient, String subject, String body,
+                        String attachmentFilename, String attachmentContentType, byte[] attachmentContent) {
     }
 }

@@ -6,6 +6,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
 
 @Component
@@ -32,6 +33,11 @@ class TenantPersistenceAdapter implements TenantRepository {
     @Override
     public Optional<Tenant> findBySlug(String slug) {
         return repository.findBySlug(slug).map(this::toDomain);
+    }
+
+    @Override
+    public List<Tenant> findAll() {
+        return repository.findAll().stream().map(this::toDomain).toList();
     }
 
     @Override
@@ -80,6 +86,7 @@ class TenantPersistenceAdapter implements TenantRepository {
         entity.primaryColor = tenant.primaryColor();
         entity.secondaryColor = tenant.secondaryColor();
         entity.borderRadius = tenant.borderRadius();
+        entity.darkMode = tenant.darkMode();
         entity.requireAssets = tenant.requireAssets();
         entity.subscriptionPlan = tenant.subscriptionPlan();
         entity.subscriptionBillingCycle = tenant.subscriptionBillingCycle();
@@ -125,7 +132,7 @@ class TenantPersistenceAdapter implements TenantRepository {
 
     private Tenant toDomain(TenantJpaEntity entity) {
         return new Tenant(entity.id, entity.legalName, entity.tradeName, entity.slug, entity.document,
-                entity.status, entity.logoUrl, entity.primaryColor, entity.secondaryColor, entity.borderRadius,
+                entity.status, entity.logoUrl, entity.primaryColor, entity.secondaryColor, entity.borderRadius, entity.darkMode,
                 entity.requireAssets, entity.subscriptionPlan,
                 entity.subscriptionBillingCycle, entity.additionalUserSeats, entity.subscriptionActive,
                 entity.subscriptionPaidUntil, entity.subscriptionPrice,

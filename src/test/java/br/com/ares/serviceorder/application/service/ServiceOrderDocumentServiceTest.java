@@ -12,6 +12,7 @@ import br.com.ares.serviceorder.application.port.in.ServiceOrderDocumentUseCase;
 import br.com.ares.serviceorder.application.port.in.ServiceOrderStatusDirectory;
 import br.com.ares.serviceorder.application.port.in.ServiceOrderUseCase;
 import br.com.ares.serviceorder.application.port.out.ServiceOrderEmailSender;
+import br.com.ares.serviceorder.application.port.out.ServiceOrderPdfGenerator;
 import br.com.ares.serviceorder.domain.model.ServiceOrder;
 import br.com.ares.serviceorder.domain.model.ServiceOrderDelivery;
 import br.com.ares.serviceorder.domain.model.ServiceOrderLine;
@@ -58,6 +59,7 @@ class ServiceOrderDocumentServiceTest {
     @Mock ServiceOrderStatusDirectory statuses;
     @Mock TenantManagementUseCase tenants;
     @Mock ServiceOrderEmailSender emailSender;
+    @Mock ServiceOrderPdfGenerator pdfGenerator;
     @Mock CurrentActorProvider currentActor;
     @Mock AuditLogPort audit;
 
@@ -67,7 +69,7 @@ class ServiceOrderDocumentServiceTest {
     @BeforeEach
     void setUp() {
         service = new ServiceOrderDocumentService(orders, customers, assets, assetTypes, statuses, tenants, emailSender,
-                currentActor, audit, Clock.fixed(NOW, ZoneOffset.UTC));
+                pdfGenerator, currentActor, audit, Clock.fixed(NOW, ZoneOffset.UTC));
         fixture = fixture();
         when(orders.get(fixture.order.id())).thenReturn(fixture.order);
         when(customers.get(fixture.customer.id())).thenReturn(fixture.customer);
@@ -101,6 +103,7 @@ class ServiceOrderDocumentServiceTest {
                 Set.of("ADMIN"), Set.of("SERVICE_ORDER_UPDATE"), null);
         when(emailSender.deliveryMode()).thenReturn("SMTP");
         when(currentActor.requiredActor()).thenReturn(actor);
+        when(pdfGenerator.generate(org.mockito.ArgumentMatchers.any())).thenReturn("%PDF-test".getBytes());
 
         var result = service.sendEmail(fixture.order.id(), new ServiceOrderDocumentUseCase.SendEmailCommand(null));
 
@@ -116,6 +119,9 @@ class ServiceOrderDocumentServiceTest {
         verify(emailSender).send(message.capture());
         assertThat(message.getValue().tenantId()).isEqualTo(fixture.tenant.id());
         assertThat(message.getValue().recipient()).isEqualTo("cliente@example.com");
+        assertThat(message.getValue().attachmentFilename()).startsWith("ordem-de-servico-").endsWith(".pdf");
+        assertThat(message.getValue().attachmentContentType()).isEqualTo("application/pdf");
+        assertThat(message.getValue().attachmentContent()).isEqualTo("%PDF-test".getBytes());
         verify(audit).record(fixture.tenant.id(), actor.userId(), "SERVICE_ORDER_EMAIL_PROCESSED",
                 "SERVICE_ORDER", fixture.order.id().toString(),
                 Map.of("recipient", "cliente@example.com", "deliveryMode", "SMTP"));
@@ -140,7 +146,7 @@ class ServiceOrderDocumentServiceTest {
         UUID assetId = UUID.randomUUID();
         UUID serviceId = UUID.randomUUID();
         var tenant = new Tenant(tenantId, "Ares Serviços Ltda.", "Oficina Ares", "oficina-ares",
-                "12345678000190", TenantStatus.ACTIVE, null, "#2457E6", "#16A085", 12, true,
+                "12345678000190", TenantStatus.ACTIVE, null, "#2457E6", "#16A085", 12, false, true,
                 SubscriptionPlan.PRO, br.com.ares.tenant.domain.model.SubscriptionBillingCycle.MONTHLY, 0,
                 true, NOW.plusSeconds(2_592_000), new BigDecimal("69.90"), null,
                 BigDecimal.ZERO.setScale(2),

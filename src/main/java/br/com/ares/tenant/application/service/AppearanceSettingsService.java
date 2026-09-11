@@ -52,10 +52,11 @@ public class AppearanceSettingsService implements AppearanceSettingsUseCase {
                     "O arredondamento deve ficar entre 6 e 24 pixels.");
         }
         Tenant updated = tenants.save(required(actor.tenantId()).withAppearance(tradeName, primaryColor,
-                secondaryColor, command.borderRadius(), clock.instant()));
+                secondaryColor, command.borderRadius(), command.darkMode(), clock.instant()));
         audit.record(actor.tenantId(), actor.userId(), "TENANT_APPEARANCE_UPDATED", "TENANT",
                 actor.tenantId().toString(), Map.of("primaryColor", primaryColor,
-                        "secondaryColor", secondaryColor, "borderRadius", command.borderRadius()));
+                        "secondaryColor", secondaryColor, "borderRadius", command.borderRadius(),
+                        "darkMode", command.darkMode()));
         return toSettings(updated);
     }
 
@@ -67,7 +68,7 @@ public class AppearanceSettingsService implements AppearanceSettingsUseCase {
     private AppearanceSettings toSettings(Tenant tenant) {
         return new AppearanceSettings(tenant.tradeName(), tenant.logoUrl(),
                 tenant.primaryColor() == null ? "#2457E6" : tenant.primaryColor(),
-                tenant.secondaryColor(), tenant.borderRadius());
+                tenant.secondaryColor(), tenant.borderRadius(), tenant.darkMode());
     }
 
     private String normalizedColor(String value, String label) {

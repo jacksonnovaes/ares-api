@@ -8,11 +8,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.mail.MailException;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.stereotype.Component;
 
+import jakarta.mail.MessagingException;
 import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 
@@ -36,17 +38,21 @@ class LoggingServiceOrderEmailSender implements ServiceOrderEmailSender {
                         "Configure e habilite o servidor SMTP da empresa antes de enviar e-mails."));
         validate(settings);
 
-        var mail = new SimpleMailMessage();
-        mail.setFrom(settings.smtpFromEmail());
-        mail.setTo(message.recipient());
-        mail.setSubject(message.subject());
-        mail.setText(message.body());
-
         try {
-            createMailSender(settings).send(mail);
+            JavaMailSender mailSender = createMailSender(settings);
+            var mail = mailSender.createMimeMessage();
+            var helper = new MimeMessageHelper(mail, true, StandardCharsets.UTF_8.name());
+            helper.setFrom(settings.smtpFromEmail());
+            helper.setTo(message.recipient());
+            helper.setSubject(message.subject());
+            helper.setText(message.body());
+            helper.addAttachment(message.attachmentFilename(),
+                    new ByteArrayResource(message.attachmentContent()), message.attachmentContentType());
+
+            mailSender.send(mail);
             LOGGER.info("Service-order email sent via SMTP for tenant {} to {}",
                     message.tenantId(), message.recipient());
-        } catch (MailException exception) {
+        } catch (MessagingException | MailException exception) {
             LOGGER.error("SMTP delivery failed for tenant {} to {}: {}",
                     message.tenantId(), message.recipient(), exception.getMessage());
             throw new BusinessException(HttpStatus.BAD_GATEWAY, "smtp_delivery_failed",

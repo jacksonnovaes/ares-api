@@ -1,6 +1,6 @@
 package br.com.ares.customer.application.service;
 
-import br.com.ares.customer.application.port.in.CustomerUseCase;
+import br.com.ares.customer.application.port.in.command.CreateCustomerCommand;
 import br.com.ares.customer.application.port.out.CustomerRepository;
 import br.com.ares.customer.domain.model.Customer;
 import br.com.ares.customer.domain.model.CustomerType;
@@ -65,8 +65,8 @@ class CustomerServiceAddressTest {
         assertThat(saved.getValue().address()).isEqualTo("Rua das Flores, 100 - Centro");
     }
 
-    private CustomerUseCase.CreateCustomerCommand command(String address) {
-        return new CustomerUseCase.CreateCustomerCommand(CustomerType.PERSON, "Maria da Silva",
+    private CreateCustomerCommand command(String address) {
+        return new CreateCustomerCommand(CustomerType.PERSON, "Maria da Silva",
                 "12345678901", "maria@example.com", "11999999999", address, null);
     }
 }

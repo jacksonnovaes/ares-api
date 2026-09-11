@@ -7,10 +7,10 @@ public interface AppearanceSettingsUseCase {
     AppearanceSettings update(UpdateAppearanceCommand command);
 
     record AppearanceSettings(String tradeName, String logoUrl, String primaryColor, String secondaryColor,
-                              int borderRadius) {
+                              int borderRadius, boolean darkMode) {
     }
 
-    record UpdateAppearanceCommand(String tradeName, String primaryColor, String secondaryColor, int borderRadius) {
+    record UpdateAppearanceCommand(String tradeName, String primaryColor, String secondaryColor, int borderRadius, boolean darkMode) {
     }
 }
 

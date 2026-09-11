@@ -12,12 +12,15 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.mail.MailSendException;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 
+import jakarta.mail.Session;
+import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMultipart;
 import java.time.Instant;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -48,18 +51,27 @@ class LoggingServiceOrderEmailSenderTest {
     }
 
     @Test
-    void sendsMessageUsingTheTenantSmtpConfiguration() {
+    void sendsMessageWithPdfAttachmentUsingTheTenantSmtpConfiguration() throws Exception {
         when(settingsRepository.findByTenantId(tenantId)).thenReturn(Optional.of(settings(true)));
+        when(mailSender.createMimeMessage()).thenReturn(new MimeMessage(Session.getInstance(new Properties())));
 
         sender.send(new ServiceOrderEmailSender.EmailMessage(tenantId, "customer@example.com",
-                "Ordem de serviço", "Conteúdo do e-mail"));
+                "Ordem de serviço", "Conteúdo do e-mail", "ordem.pdf", "application/pdf",
+                "%PDF-test".getBytes()));
 
-        var message = ArgumentCaptor.forClass(SimpleMailMessage.class);
+        var message = ArgumentCaptor.forClass(MimeMessage.class);
         verify(mailSender).send(message.capture());
-        assertThat(message.getValue().getFrom()).isEqualTo("sender@example.com");
-        assertThat(message.getValue().getTo()).containsExactly("customer@example.com");
+        message.getValue().saveChanges();
+        assertThat(message.getValue().getFrom()[0].toString()).isEqualTo("sender@example.com");
+        assertThat(message.getValue().getAllRecipients()[0].toString()).isEqualTo("customer@example.com");
         assertThat(message.getValue().getSubject()).isEqualTo("Ordem de serviço");
-        assertThat(message.getValue().getText()).isEqualTo("Conteúdo do e-mail");
+        var multipart = (MimeMultipart) message.getValue().getContent();
+        assertThat(multipart.getCount()).isEqualTo(2);
+        var related = (MimeMultipart) multipart.getBodyPart(0).getContent();
+        assertThat(related.getBodyPart(0).getContent().toString()).contains("Conteúdo do e-mail");
+        assertThat(multipart.getBodyPart(1).getFileName()).isEqualTo("ordem.pdf");
+        assertThat(multipart.getBodyPart(1).getContentType()).startsWith("application/pdf");
+        assertThat(multipart.getBodyPart(1).getInputStream().readAllBytes()).isEqualTo("%PDF-test".getBytes());
         assertThat(sender.deliveryMode()).isEqualTo("SMTP");
     }
 
@@ -87,7 +99,7 @@ class LoggingServiceOrderEmailSenderTest {
         when(settingsRepository.findByTenantId(tenantId)).thenReturn(Optional.of(settings(false)));
 
         assertThatThrownBy(() -> sender.send(new ServiceOrderEmailSender.EmailMessage(tenantId,
-                "customer@example.com", "Assunto", "Mensagem")))
+                "customer@example.com", "Assunto", "Mensagem", "ordem.pdf", "application/pdf", new byte[]{1})))
                 .isInstanceOfSatisfying(BusinessException.class, exception -> {
                     assertThat(exception.code()).isEqualTo("smtp_not_configured");
                     assertThat(exception.status()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -97,11 +109,12 @@ class LoggingServiceOrderEmailSenderTest {
     @Test
     void convertsMailServerFailuresToAUsefulApiError() {
         when(settingsRepository.findByTenantId(tenantId)).thenReturn(Optional.of(settings(true)));
+        when(mailSender.createMimeMessage()).thenReturn(new MimeMessage(Session.getInstance(new Properties())));
         doThrow(new MailSendException("Authentication failed"))
-                .when(mailSender).send(any(SimpleMailMessage.class));
+                .when(mailSender).send(any(MimeMessage.class));
 
         assertThatThrownBy(() -> sender.send(new ServiceOrderEmailSender.EmailMessage(tenantId,
-                "customer@example.com", "Assunto", "Mensagem")))
+                "customer@example.com", "Assunto", "Mensagem", "ordem.pdf", "application/pdf", new byte[]{1})))
                 .isInstanceOfSatisfying(BusinessException.class, exception -> {
                     assertThat(exception.code()).isEqualTo("smtp_delivery_failed");
                     assertThat(exception.status()).isEqualTo(HttpStatus.BAD_GATEWAY);
@@ -114,4 +127,3 @@ class LoggingServiceOrderEmailSenderTest {
                 "mailer@example.com", "secret-password", "sender@example.com", true, Instant.now());
     }
 }
-
