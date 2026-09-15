@@ -25,9 +25,9 @@ class SubscriptionPricingServiceTest {
         var quote = service.quote(SubscriptionPlan.PRO, SubscriptionBillingCycle.MONTHLY, 0,
                 " BEMVINDO20 ");
 
-        assertThat(quote.originalPrice()).isEqualByComparingTo("69.90");
-        assertThat(quote.discountAmount()).isEqualByComparingTo("13.98");
-        assertThat(quote.finalPrice()).isEqualByComparingTo("55.92");
+        assertThat(quote.originalPrice()).isEqualByComparingTo("49.90");
+        assertThat(quote.discountAmount()).isEqualByComparingTo("9.98");
+        assertThat(quote.finalPrice()).isEqualByComparingTo("39.92");
         assertThat(quote.couponCode()).isEqualTo("BEMVINDO20");
     }
 
@@ -37,10 +37,10 @@ class SubscriptionPricingServiceTest {
 
         var quote = service.quote(SubscriptionPlan.PRO, SubscriptionBillingCycle.ANNUAL, 2, null);
 
-        assertThat(quote.basePrice()).isEqualByComparingTo("699.00");
-        assertThat(quote.additionalUsersPrice()).isEqualByComparingTo("258.00");
-        assertThat(quote.finalPrice()).isEqualByComparingTo("957.00");
-        assertThat(quote.monthlyEquivalent()).isEqualByComparingTo("79.75");
+        assertThat(quote.basePrice()).isEqualByComparingTo("499.00");
+        assertThat(quote.additionalUsersPrice()).isEqualByComparingTo("198.00");
+        assertThat(quote.finalPrice()).isEqualByComparingTo("697.00");
+        assertThat(quote.monthlyEquivalent()).isEqualByComparingTo("58.08");
         assertThat(quote.userLimit()).isEqualTo(5);
     }
 

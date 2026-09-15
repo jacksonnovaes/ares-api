@@ -63,7 +63,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           repository: jacksonnovaes/aresweb
-          ref: develop
+          ref: ${{ github.ref_name == 'main' && 'main' || 'develop' }}
           path: bundle/aresweb
           token: ${{ secrets.CROSS_REPOSITORY_TOKEN }}
           persist-credentials: false

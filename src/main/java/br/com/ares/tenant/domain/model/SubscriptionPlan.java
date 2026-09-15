@@ -4,19 +4,19 @@ import java.math.BigDecimal;
 import java.util.List;
 
 public enum SubscriptionPlan {
-    SOLO("Solo", new BigDecimal("29.90"), new BigDecimal("299.00"), 1, List.of(
+    SOLO("Solo", new BigDecimal("19.90"), new BigDecimal("199.00"), 1, List.of(
             "Clientes e catálogo de serviços",
             "Agenda de atendimentos",
             "Orçamentos e ordens de serviço",
             "PDF e histórico de atendimentos",
             "Página profissional pública"
     )),
-    PRO("Pro", new BigDecimal("69.90"), new BigDecimal("699.00"), 3, List.of(
+    PRO("Pro", new BigDecimal("49.90"), new BigDecimal("499.00"), 3, List.of(
             "Tudo do Solo",
             "Gestão de técnicos e equipe",
             "Personalização e dashboard operacional"
     )),
-    BUSINESS("Business", new BigDecimal("149.90"), new BigDecimal("1499.00"), 10, List.of(
+    BUSINESS("Business", new BigDecimal("99.90"), new BigDecimal("999.00"), 10, List.of(
             "Tudo do Pro",
             "Permissões por perfil",
             "Gestão avançada e indicadores gerenciais"

@@ -53,7 +53,7 @@ class PrivacyControllerIntegrationTest {
                                 }
                                 """))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.price").value(23.92));
+                .andExpect(jsonPath("$.price").value(15.92));
 
         String loginBody = mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)

@@ -17,8 +17,8 @@ import java.util.Locale;
 public class SubscriptionPricingService {
 
     private static final ZoneId BUSINESS_ZONE = ZoneId.of("America/Sao_Paulo");
-    public static final BigDecimal ADDITIONAL_USER_MONTHLY_PRICE = new BigDecimal("12.90");
-    public static final BigDecimal ADDITIONAL_USER_ANNUAL_PRICE = new BigDecimal("129.00");
+    public static final BigDecimal ADDITIONAL_USER_MONTHLY_PRICE = new BigDecimal("9.90");
+    public static final BigDecimal ADDITIONAL_USER_ANNUAL_PRICE = new BigDecimal("99.00");
 
     private final String configuredCouponCode;
     private final BigDecimal configuredDiscountPercentage;

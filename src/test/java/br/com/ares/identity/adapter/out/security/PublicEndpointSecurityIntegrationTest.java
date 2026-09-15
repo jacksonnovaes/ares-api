@@ -40,8 +40,8 @@ class PublicEndpointSecurityIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.deliveryMode").value("SIMULATION"))
                 .andExpect(jsonPath("$.plan").value("PRO"))
-                .andExpect(jsonPath("$.originalPrice").value(69.90))
-                .andExpect(jsonPath("$.price").value(69.90))
+                .andExpect(jsonPath("$.originalPrice").value(49.90))
+                .andExpect(jsonPath("$.price").value(49.90))
                 .andExpect(jsonPath("$.userLimit").value(3));
     }
 
@@ -54,7 +54,7 @@ class PublicEndpointSecurityIntegrationTest {
                 .andExpect(jsonPath("$.couponEnabled").value(true))
                 .andExpect(jsonPath("$.termsVersion").value("2026-08-27"))
                 .andExpect(jsonPath("$.plans[0].code").value("SOLO"))
-                .andExpect(jsonPath("$.plans[0].monthlyPrice").value(29.90))
+                .andExpect(jsonPath("$.plans[0].monthlyPrice").value(19.90))
                 .andExpect(jsonPath("$.plans[0].features[1]").value("Agenda de atendimentos"))
                 .andExpect(jsonPath("$.plans[2].includedUsers").value(10));
     }
@@ -70,7 +70,7 @@ class PublicEndpointSecurityIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.couponCode").value("BEMVINDO20"))
                 .andExpect(jsonPath("$.discountPercentage").value(20))
-                .andExpect(jsonPath("$.price").value(55.92));
+                .andExpect(jsonPath("$.price").value(39.92));
     }
 
     @Test

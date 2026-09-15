@@ -33,7 +33,7 @@ class RegistrationAssetTypesIntegrationTest {
         assertThat(result.plan()).isEqualTo(SubscriptionPlan.PRO);
         assertThat(result.subscriptionActive()).isTrue();
         assertThat(result.subscriptionPaidUntil()).isNotNull();
-        assertThat(result.price()).isEqualByComparingTo("55.92");
+        assertThat(result.price()).isEqualByComparingTo("39.92");
         assertThat(result.couponCode()).isEqualTo("BEMVINDO20");
 
         assertThat(assetTypes.findAllByTenantId(result.tenantId()))

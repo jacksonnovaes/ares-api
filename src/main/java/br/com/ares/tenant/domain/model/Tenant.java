@@ -124,6 +124,19 @@ public record Tenant(
                 publicBackgroundImagePath, publicShowLogo, publicBackgroundOverlayPercentage, createdAt, at);
     }
 
+    public Tenant withSubscription(SubscriptionPlan plan, SubscriptionBillingCycle billingCycle,
+                                   int extraUserSeats, boolean active, Instant paidUntil,
+                                   BigDecimal price, Instant at) {
+        return new Tenant(id, legalName, tradeName, slug, document, status, logoUrl, primaryColor, secondaryColor,
+                borderRadius, darkMode, requireAssets, plan, billingCycle, extraUserSeats, active, paidUntil, price,
+                null, BigDecimal.ZERO.setScale(2), quoteCalculationMethod, enabledQuoteCalculationMethods,
+                defaultSquareMeterPrice, defaultCubicMeterPrice, publicPageEnabled, publicHeadline,
+                publicDescription, publicWhatsapp, publicEmail, publicCity, publicServiceArea, publicShowPrices,
+                publicServiceSource, publicManualServices, publicAccentColor, publicBackgroundColor, publicTextColor,
+                publicProfileImagePath, publicLogoPath, publicBackgroundImagePath, publicShowLogo,
+                publicBackgroundOverlayPercentage, createdAt, at);
+    }
+
     public Tenant withPublicProfile(boolean enabled, String headline, String description, String whatsapp,
                                     String email, String city, String serviceArea, boolean showPrices,
                                     PublicServiceSource serviceSource,
