@@ -1,3 +1,4 @@
+# Nome estável para manter os containers e volumes já existentes em produção.
 name: ares
 
 x-logging: &default-logging

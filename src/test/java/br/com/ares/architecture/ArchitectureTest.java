@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
+import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
 
 @AnalyzeClasses(
         packages = "br.com.ares",
@@ -48,4 +49,5 @@ class ArchitectureTest {
             .should().resideInAPackage("..adapter.in.web")
             .andShould().beAnnotatedWith(RestController.class)
             .because("HTTP entry points must follow the web adapter convention");
+
 }

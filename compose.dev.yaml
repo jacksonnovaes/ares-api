@@ -1,0 +1,101 @@
+name: ares-api
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-ares}
+      POSTGRES_USER: ${POSTGRES_USER:-ares}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD no .env}
+    volumes:
+      - ares-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - ares-network
+
+  api:
+    build:
+      context: .
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-ares}
+      DB_USERNAME: ${POSTGRES_USER:-ares}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD no .env}
+      PUBLIC_WEB_URL: http://localhost:${WEB_PORT:-3001}
+      SUBSCRIPTION_PAYMENT_SIMULATION_ENABLED: ${SUBSCRIPTION_PAYMENT_SIMULATION_ENABLED:-true}
+      PUBLIC_PROFILE_MEDIA_ROOT: /data/public-profile-media
+    ports:
+      - "127.0.0.1:${API_PORT:-8080}:8080"
+    volumes:
+      - ares-public-profile-media:/data/public-profile-media
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:8080/actuator/health/readiness | grep -q 'UP'"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+      start_period: 20s
+    networks:
+      - ares-network
+
+  web:
+    build:
+      context: ../aresweb
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_LEGAL_OPERATOR_NAME: ${NEXT_PUBLIC_LEGAL_OPERATOR_NAME:-}
+        NEXT_PUBLIC_LEGAL_OPERATOR_DOCUMENT: ${NEXT_PUBLIC_LEGAL_OPERATOR_DOCUMENT:-}
+        NEXT_PUBLIC_LEGAL_OPERATOR_ADDRESS: ${NEXT_PUBLIC_LEGAL_OPERATOR_ADDRESS:-}
+        NEXT_PUBLIC_PRIVACY_EMAIL: ${NEXT_PUBLIC_PRIVACY_EMAIL:-}
+        NEXT_PUBLIC_LEGAL_TERMS_VERSION: ${LEGAL_TERMS_VERSION:-2026-08-27}
+        NEXT_PUBLIC_LEGAL_PRIVACY_VERSION: ${LEGAL_PRIVACY_VERSION:-2026-08-27}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      API_URL: http://api:8080
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+      NEXT_TELEMETRY_DISABLED: 1
+    ports:
+      - "127.0.0.1:${WEB_PORT:-3001}:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:3000/"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+      start_period: 30s
+    networks:
+      - ares-network
+
+  api-test:
+    profiles:
+      - test
+    build:
+      context: .
+    environment:
+      SPRING_PROFILES_ACTIVE: test
+    ports:
+      - "127.0.0.1:8081:8080"
+    networks:
+      - ares-network
+
+volumes:
+  ares-postgres-data:
+  ares-public-profile-media:
+
+networks:
+  ares-network:
+    driver: bridge
